@@ -1,0 +1,31 @@
+# Coq build artifacts
+*.vo
+*.glob
+*.vok
+*.vos
+*.aux
+*.cache
+
+# CoqIDE
+*.state
+
+# Build directory
+_build/
+
+# Rust
+target/
+**/*.d
+**/*.rlib
+**/*.rs.bk
+proptest-regressions/
+
+# IDE
+**/.vscode/
+**/.cursor/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
