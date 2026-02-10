@@ -1,11 +1,18 @@
+#![allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::overly_complex_bool_expr,
+    clippy::bool_comparison
+)]
+
 use vca::{
     admissibility::is_admissible,
     coherence::{all_admissible, is_coherent},
     core::core_star,
     registry::KindRegistry,
     relation::Relation,
-    replay::{replay, ReplicaId, Transaction, VectorClock},
-    sla::{check_sla, StatePredicate},
+    replay::{ReplicaId, Transaction, VectorClock, replay},
+    sla::{StatePredicate, check_sla},
     slot::SlotId,
     system::{RuleRef, VCASystem},
     temporal::TemporalFormula,
@@ -623,9 +630,9 @@ fn theorem_2_all_rule_loci_in_core_star_are_valid() {
 
 #[test]
 fn theorem_1_shallow_access_interpretation_does_not_access_rule_relations() {
+    use vca::RuleRef;
     use vca::relation::Relation;
     use vca::transitions::Transition;
-    use vca::RuleRef;
 
     let data_slot1 = SlotId(1);
     let data_slot2 = SlotId(2);
@@ -730,9 +737,9 @@ fn theorem_1_shallow_access_interpretation_does_not_access_rule_relations() {
 
 #[test]
 fn theorem_1_shallow_access_interpretation_does_not_access_rule_rule_system() {
+    use vca::RuleRef;
     use vca::relation::Relation;
     use vca::transitions::Transition;
-    use vca::RuleRef;
 
     let data_slot1 = SlotId(1);
     let data_slot2 = SlotId(2);
@@ -825,9 +832,9 @@ fn theorem_1_shallow_access_interpretation_does_not_access_rule_rule_system() {
 
 #[test]
 fn theorem_1_shallow_access_interpretation_only_accesses_rule_slots_and_types() {
+    use vca::RuleRef;
     use vca::relation::Relation;
     use vca::transitions::Transition;
-    use vca::RuleRef;
 
     let data_slot1 = SlotId(1);
     let data_slot2 = SlotId(2);
@@ -926,9 +933,9 @@ fn theorem_1_shallow_access_interpretation_only_accesses_rule_slots_and_types() 
 
 #[test]
 fn theorem_1_shallow_access_self_referential_admissibility_terminates() {
+    use vca::RuleRef;
     use vca::relation::Relation;
     use vca::transitions::Transition;
-    use vca::RuleRef;
 
     let data_slot1 = SlotId(1);
     let data_slot2 = SlotId(2);
@@ -999,9 +1006,9 @@ fn theorem_1_shallow_access_self_referential_admissibility_terminates() {
 
 #[test]
 fn theorem_2_self_ref_coherent_iff_struct_and_admissible() {
+    use vca::RuleRef;
     use vca::relation::Relation;
     use vca::transitions::Transition;
-    use vca::RuleRef;
 
     let data_slot1 = SlotId(1);
     let data_slot2 = SlotId(2);
@@ -1111,9 +1118,9 @@ fn theorem_2_self_ref_not_coherent_when_not_struct() {
 
 #[test]
 fn theorem_2_self_ref_not_coherent_when_not_admissible() {
+    use vca::RuleRef;
     use vca::relation::Relation;
     use vca::transitions::Transition;
-    use vca::RuleRef;
 
     let data_slot1 = SlotId(1);
     let data_slot2 = SlotId(2);
@@ -1192,9 +1199,9 @@ fn theorem_2_self_ref_not_coherent_when_not_admissible() {
 
 #[test]
 fn theorem_2_self_ref_coherent_terminates_no_circularity() {
+    use vca::RuleRef;
     use vca::relation::Relation;
     use vca::transitions::Transition;
-    use vca::RuleRef;
 
     let data_slot1 = SlotId(1);
     let data_slot2 = SlotId(2);
@@ -1266,9 +1273,9 @@ fn theorem_2_self_ref_coherent_terminates_no_circularity() {
 
 #[test]
 fn theorem_2_self_ref_coherent_terminates_even_with_complex_structure() {
+    use vca::RuleRef;
     use vca::relation::Relation;
     use vca::transitions::Transition;
-    use vca::RuleRef;
 
     let data_slot1 = SlotId(1);
     let data_slot2 = SlotId(2);
@@ -1602,9 +1609,9 @@ fn theorem_3_structural_validity_complexity_o_v_plus_a() {
 
 #[test]
 fn theorem_4_admissibility_decidable_terminates() {
+    use vca::RuleRef;
     use vca::relation::Relation;
     use vca::transitions::Transition;
-    use vca::RuleRef;
 
     let data_slot1 = SlotId(1);
     let data_slot2 = SlotId(2);
@@ -1675,9 +1682,9 @@ fn theorem_4_admissibility_decidable_terminates() {
 
 #[test]
 fn theorem_4_admissibility_decidable_complexity_o_vr_m() {
+    use vca::RuleRef;
     use vca::relation::Relation;
     use vca::transitions::Transition;
-    use vca::RuleRef;
 
     let data_slot1 = SlotId(1);
     let data_slot2 = SlotId(2);
@@ -1758,9 +1765,9 @@ fn theorem_4_admissibility_decidable_complexity_o_vr_m() {
 
 #[test]
 fn theorem_4_admissibility_decidable_returns_boolean_for_all_kinds() {
+    use vca::RuleRef;
     use vca::relation::Relation;
     use vca::transitions::Transition;
-    use vca::RuleRef;
 
     let data_slot1 = SlotId(1);
     let data_slot2 = SlotId(2);
@@ -1811,7 +1818,7 @@ fn theorem_4_admissibility_decidable_returns_boolean_for_all_kinds() {
         let rule_slot = SlotId(100);
         let rule_type = SlotType {
             family: Family::Rule,
-            kind: kind.clone(),
+            kind,
             layer: Layer::N(0),
             affinity: Affinity::Strict,
             lower: 0,
@@ -1837,9 +1844,9 @@ fn theorem_4_admissibility_decidable_returns_boolean_for_all_kinds() {
 
 #[test]
 fn theorem_5_level_n_coherence_depends_only_on_n_and_n_minus_1() {
+    use vca::RuleRef;
     use vca::tower::Tower;
     use vca::transitions::Transition;
-    use vca::RuleRef;
 
     // create base level (level 0) with Kind::Any rule
     let rule_slot = SlotId(1);
@@ -1957,9 +1964,9 @@ fn theorem_5_level_n_coherence_depends_only_on_n_and_n_minus_1() {
 
 #[test]
 fn theorem_5_modifying_level_k_does_not_affect_levels_less_than_k() {
+    use vca::RuleRef;
     use vca::tower::Tower;
     use vca::transitions::Transition;
-    use vca::RuleRef;
 
     // create base level (level 0) with Kind::Any rule
     let rule_slot = SlotId(1);
@@ -2076,9 +2083,9 @@ fn theorem_5_modifying_level_k_does_not_affect_levels_less_than_k() {
 
 #[test]
 fn theorem_5_level_n_coherence_uses_only_slots_and_types_from_n_minus_1() {
+    use vca::RuleRef;
     use vca::tower::Tower;
     use vca::transitions::Transition;
-    use vca::RuleRef;
 
     // create base level (level 0) with Kind::Any rule
     let rule_slot = SlotId(1);
@@ -2186,8 +2193,8 @@ fn theorem_5_level_n_coherence_uses_only_slots_and_types_from_n_minus_1() {
 
 #[test]
 fn theorem_6_tower_coherence_is_greatest_fixed_point_all_prefixes_coherent() {
-    use vca::tower::Tower;
     use vca::RuleRef;
+    use vca::tower::Tower;
 
     // create a coherent tower with multiple levels
     let rule_slot = SlotId(1);
@@ -2260,9 +2267,9 @@ fn theorem_6_tower_coherence_is_greatest_fixed_point_all_prefixes_coherent() {
 
 #[test]
 fn theorem_6_tower_coherence_gfp_characterization_incoherent_tower() {
+    use vca::RuleRef;
     use vca::relation::Relation;
     use vca::tower::Tower;
-    use vca::RuleRef;
 
     // create a tower where one level is incoherent
     // base has Kind::None rule, so relations won't be admissible
@@ -2349,8 +2356,8 @@ fn theorem_6_tower_coherence_gfp_characterization_incoherent_tower() {
 
 #[test]
 fn theorem_6_finite_prefix_decidable_terminates() {
-    use vca::tower::Tower;
     use vca::RuleRef;
+    use vca::tower::Tower;
 
     // create a tower
     let rule_slot = SlotId(1);
@@ -2424,8 +2431,8 @@ fn theorem_6_finite_prefix_decidable_terminates() {
 
 #[test]
 fn theorem_6_finite_prefix_decidable_complexity() {
-    use vca::tower::Tower;
     use vca::RuleRef;
+    use vca::tower::Tower;
 
     // create a large tower to test complexity
     let rule_slot = SlotId(1);
@@ -2496,8 +2503,8 @@ fn theorem_6_finite_prefix_decidable_complexity() {
 
 #[test]
 fn theorem_6_coinductive_interpretation_no_violation_found() {
-    use vca::tower::Tower;
     use vca::RuleRef;
+    use vca::tower::Tower;
 
     // coinductive interpretation: a tower is coherent if we can never find a level
     // that violates local coherence. this is safety: "nothing bad ever happens."
@@ -2570,8 +2577,8 @@ fn theorem_6_coinductive_interpretation_no_violation_found() {
 
 #[test]
 fn theorem_7_finite_prefix_decidable_terminates() {
-    use vca::tower::Tower;
     use vca::RuleRef;
+    use vca::tower::Tower;
 
     // create a tower with multiple levels
     let rule_slot = SlotId(1);
@@ -2646,10 +2653,10 @@ fn theorem_7_finite_prefix_decidable_terminates() {
 
 #[test]
 fn theorem_7_finite_prefix_decidable_complexity_o_n_a_v_m() {
+    use vca::RuleRef;
     use vca::relation::Relation;
     use vca::tower::Tower;
     use vca::transitions::Transition;
-    use vca::RuleRef;
 
     // theorem 7 complexity: O(n · A · V · m)
     // where n = number of levels, A = max relations per level,
@@ -2734,7 +2741,7 @@ fn theorem_7_finite_prefix_decidable_complexity_o_n_a_v_m() {
             }
 
             // add relations to this level
-            let level_slots: Vec<SlotId> = level.slots.iter().cloned().collect();
+            let level_slots: Vec<SlotId> = level.slots.to_vec();
             for j in 0..relations_per_level.min(level_slots.len().saturating_sub(1)) {
                 if level_slots.len() >= 2 {
                     let source = level_slots[j % level_slots.len()];
@@ -3292,8 +3299,8 @@ fn theorem_11_independent_transitions_commute() {
     // theorem 11: if δ₁ ⊥ δ₂ then δ₁(δ₂(F)) = δ₂(δ₁(F))
     // if two transitions are independent, applying them in either order produces the same result
 
-    use vca::independence::is_independent;
     use vca::RuleRef;
+    use vca::independence::is_independent;
 
     fn normalize_system(mut system: VCASystem) -> VCASystem {
         // sort slots for consistent comparison (order doesn't matter semantically)
@@ -4002,12 +4009,8 @@ fn theorem_13_box_coinductive() {
 
         // for each finite prefix k, if we never find a violation, then □φ holds for that prefix
         for k in 0..tower.height() {
-            let holds_at_all_levels = (0..=k).all(|i| {
-                tower
-                    .level(i)
-                    .map(|level| is_coherent(level))
-                    .unwrap_or(false)
-            });
+            let holds_at_all_levels =
+                (0..=k).all(|i| tower.level(i).map(is_coherent).unwrap_or(false));
 
             let always_holds = check_sla(&sla, &tower, k);
 
@@ -4428,8 +4431,8 @@ fn theorem_15_sla_finite_prefix_decidable() {
     // theorem 15: □-only SLAs are decidable up to n in O(|Ω*| · n^d · c)
     // where |Ω*| is formula size, n is number of levels, d is nesting depth, c is cost of base property
 
-    use vca::tower::Tower;
     use vca::RuleRef;
+    use vca::tower::Tower;
 
     // helper to create a coherent tower with n levels
     fn make_coherent_tower(num_levels: usize) -> Tower {
@@ -4476,7 +4479,7 @@ fn theorem_15_sla_finite_prefix_decidable() {
                 id: TypeId(10 + i as u64),
                 meta: TypeMeta::None,
             };
-            let prev_level = tower.level((i - 1) as usize).unwrap().clone();
+            let prev_level = tower.level(i - 1).unwrap().clone();
             let mut level = VCASystem::new(level_slot, level_type).unwrap();
             level.rule_ref = RuleRef::External(Box::new(prev_level));
             tower.push_level(level).unwrap();

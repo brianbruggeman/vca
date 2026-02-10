@@ -227,6 +227,18 @@ pub fn beta_reduce(app_slot: SlotId, system: &VCASystem) -> Result<Vec<Transitio
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
+impl Transition {
+    fn as_insert_slot(&self) -> Option<(SlotId, &SlotType)> {
+        match self {
+            Transition::InsertSlot { v, t } => Some((*v, t)),
+            _ => None,
+        }
+    }
+}
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
     use crate::system::RuleRef;
@@ -476,15 +488,5 @@ mod tests {
 
         let result = beta_reduce(x_id, &system);
         assert_eq!(result, Err(LambdaError::NotApplication { slot_id: x_id }));
-    }
-}
-
-#[cfg(test)]
-impl Transition {
-    fn as_insert_slot(&self) -> Option<(SlotId, &SlotType)> {
-        match self {
-            Transition::InsertSlot { v, t } => Some((*v, t)),
-            _ => None,
-        }
     }
 }

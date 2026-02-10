@@ -84,6 +84,7 @@ impl Default for KindRegistry {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
     use crate::admissibility::InterpretAny;

@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used, clippy::expect_used)]
+
 use proptest::prelude::*;
 use vca::{
     core::{core, core_r, core_star},

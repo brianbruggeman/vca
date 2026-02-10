@@ -98,6 +98,7 @@ pub fn is_independent(t1: &Transition, t2: &Transition, system: &VCASystem) -> b
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
     use crate::relation::Relation;
@@ -548,6 +549,7 @@ mod tests {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod proptest_tests {
     use super::*;
     use crate::types::{Affinity, Family, Kind, Layer, SlotType, TypeId, TypeMeta, UpperBound};

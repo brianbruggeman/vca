@@ -25,6 +25,7 @@ pub fn is_coherent(system: &VCASystem) -> bool {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
     use crate::relation::Relation;

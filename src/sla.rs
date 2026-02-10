@@ -62,6 +62,7 @@ pub fn check_sla(sla: &SLA, tower: &Tower, up_to: usize) -> bool {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
     use crate::relation::Relation;

@@ -1,6 +1,5 @@
 use crate::system::VCASystem;
 use crate::transitions::{Transition, TransitionError};
-use futures::future;
 use thiserror::Error;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -43,13 +42,9 @@ impl DeltaStream {
     }
 }
 
-pub async fn apply_stream(
-    stream: &DeltaStream,
-    initial: &VCASystem,
-) -> Result<VCASystem, StreamError> {
+pub fn apply_stream(stream: &DeltaStream, initial: &VCASystem) -> Result<VCASystem, StreamError> {
     let mut current = initial.clone();
     for (index, transition) in stream.0.iter().enumerate() {
-        future::ready(()).await;
         current = transition
             .apply(&current)
             .map_err(|error| StreamError::TransitionFailed { index, error })?;
@@ -57,18 +52,17 @@ pub async fn apply_stream(
     Ok(current)
 }
 
-pub async fn apply_stream_with_callback<F, Fut>(
+pub fn apply_stream_with_callback<F>(
     stream: &DeltaStream,
     initial: &VCASystem,
     mut on_transition: F,
 ) -> Result<VCASystem, StreamError>
 where
-    F: FnMut(usize, &Transition, &VCASystem) -> Fut,
-    Fut: std::future::Future<Output = Result<(), StreamError>>,
+    F: FnMut(usize, &Transition, &VCASystem) -> Result<(), StreamError>,
 {
     let mut current = initial.clone();
     for (index, transition) in stream.0.iter().enumerate() {
-        on_transition(index, transition, &current).await?;
+        on_transition(index, transition, &current)?;
         current = transition
             .apply(&current)
             .map_err(|error| StreamError::TransitionFailed { index, error })?;
@@ -77,6 +71,7 @@ where
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
     use crate::slot::SlotId;
@@ -149,18 +144,18 @@ mod tests {
         assert_eq!(combined.len(), 2);
     }
 
-    #[tokio::test]
-    async fn apply_stream_empty_returns_initial_unchanged() {
+    #[test]
+    fn apply_stream_empty_returns_initial_unchanged() {
         let initial = make_test_system();
         let stream = DeltaStream::empty();
-        let result = apply_stream(&stream, &initial).await.unwrap();
+        let result = apply_stream(&stream, &initial).unwrap();
         assert_eq!(result.slots, initial.slots);
         assert_eq!(result.relations, initial.relations);
         assert_eq!(result.types, initial.types);
     }
 
-    #[tokio::test]
-    async fn apply_stream_single_valid_transition_applies_correctly() {
+    #[test]
+    fn apply_stream_single_valid_transition_applies_correctly() {
         let initial = make_test_system();
         let new_slot = SlotId(999);
         let (_, slot_type) = make_test_slot();
@@ -169,13 +164,13 @@ mod tests {
             t: slot_type,
         };
         let stream = DeltaStream::singleton(transition);
-        let result = apply_stream(&stream, &initial).await.unwrap();
+        let result = apply_stream(&stream, &initial).unwrap();
         assert!(result.contains_slot(new_slot));
         assert_eq!(result.slot_count(), initial.slot_count() + 1);
     }
 
-    #[tokio::test]
-    async fn apply_stream_sequence_applies_in_order() {
+    #[test]
+    fn apply_stream_sequence_applies_in_order() {
         let initial = make_test_system();
         let slot1 = SlotId(999);
         let slot2 = SlotId(998);
@@ -191,14 +186,14 @@ mod tests {
         let mut stream = DeltaStream::empty();
         stream.append(transition1);
         stream.append(transition2);
-        let result = apply_stream(&stream, &initial).await.unwrap();
+        let result = apply_stream(&stream, &initial).unwrap();
         assert!(result.contains_slot(slot1));
         assert!(result.contains_slot(slot2));
         assert_eq!(result.slot_count(), initial.slot_count() + 2);
     }
 
-    #[tokio::test]
-    async fn apply_stream_invalid_transition_returns_error_with_index() {
+    #[test]
+    fn apply_stream_invalid_transition_returns_error_with_index() {
         let initial = make_test_system();
         let (slot, slot_type) = make_test_slot();
         let invalid_transition = Transition::InsertSlot {
@@ -206,7 +201,7 @@ mod tests {
             t: slot_type,
         };
         let stream = DeltaStream::singleton(invalid_transition);
-        let result = apply_stream(&stream, &initial).await;
+        let result = apply_stream(&stream, &initial);
         assert!(result.is_err());
         if let Err(StreamError::TransitionFailed { index, .. }) = result {
             assert_eq!(index, 0);
@@ -215,8 +210,8 @@ mod tests {
         }
     }
 
-    #[tokio::test]
-    async fn apply_stream_transitions_after_failure_not_applied() {
+    #[test]
+    fn apply_stream_transitions_after_failure_not_applied() {
         let initial = make_test_system();
         let (slot, slot_type) = make_test_slot();
         let invalid_transition = Transition::InsertSlot {
@@ -231,14 +226,14 @@ mod tests {
         let mut stream = DeltaStream::empty();
         stream.append(invalid_transition);
         stream.append(valid_transition);
-        let result = apply_stream(&stream, &initial).await;
+        let result = apply_stream(&stream, &initial);
         assert!(result.is_err());
         let final_system = initial;
         assert!(!final_system.contains_slot(new_slot));
     }
 
-    #[tokio::test]
-    async fn apply_stream_with_callback_invokes_callback_per_transition() {
+    #[test]
+    fn apply_stream_with_callback_invokes_callback_per_transition() {
         let initial = make_test_system();
         let new_slot = SlotId(999);
         let (_, slot_type) = make_test_slot();
@@ -247,24 +242,20 @@ mod tests {
             t: slot_type,
         };
         let stream = DeltaStream::singleton(transition);
-        let callback_count = std::cell::Cell::new(0);
+        let mut callback_count = 0;
         let result =
             apply_stream_with_callback(&stream, &initial, |index, _transition, _system| {
-                let count = callback_count.get();
-                callback_count.set(count + 1);
-                async move {
-                    assert_eq!(index, 0);
-                    Ok(())
-                }
+                callback_count += 1;
+                assert_eq!(index, 0);
+                Ok(())
             })
-            .await
             .unwrap();
-        assert_eq!(callback_count.get(), 1);
+        assert_eq!(callback_count, 1);
         assert!(result.contains_slot(new_slot));
     }
 
-    #[tokio::test]
-    async fn apply_stream_with_callback_receives_correct_parameters() {
+    #[test]
+    fn apply_stream_with_callback_receives_correct_parameters() {
         let initial = make_test_system();
         let slot1 = SlotId(999);
         let slot2 = SlotId(998);
@@ -283,27 +274,22 @@ mod tests {
         let mut indices = Vec::new();
         let result = apply_stream_with_callback(&stream, &initial, |index, _transition, system| {
             indices.push(index);
-            let system_clone = system.clone();
-            let slot1_clone = slot1;
-            async move {
-                assert!(system_clone.contains_slot(SlotId(1)));
-                if index == 0 {
-                    assert!(!system_clone.contains_slot(slot1_clone));
-                } else if index == 1 {
-                    assert!(system_clone.contains_slot(slot1_clone));
-                }
-                Ok(())
+            assert!(system.contains_slot(SlotId(1)));
+            if index == 0 {
+                assert!(!system.contains_slot(slot1));
+            } else if index == 1 {
+                assert!(system.contains_slot(slot1));
             }
+            Ok(())
         })
-        .await
         .unwrap();
         assert_eq!(indices, vec![0, 1]);
         assert!(result.contains_slot(slot1));
         assert!(result.contains_slot(slot2));
     }
 
-    #[tokio::test]
-    async fn apply_stream_with_callback_error_propagates() {
+    #[test]
+    fn apply_stream_with_callback_error_propagates() {
         let initial = make_test_system();
         let new_slot = SlotId(999);
         let (_, slot_type) = make_test_slot();
@@ -312,22 +298,18 @@ mod tests {
             t: slot_type,
         };
         let stream = DeltaStream::singleton(transition);
-        let result = apply_stream_with_callback(
-            &stream,
-            &initial,
-            |_index, _transition, _system| async move {
+        let result =
+            apply_stream_with_callback(&stream, &initial, |_index, _transition, _system| {
                 Err(StreamError::TransitionFailed {
                     index: 0,
                     error: TransitionError::PreconditionFailed("test error".to_string()),
                 })
-            },
-        )
-        .await;
+            });
         assert!(result.is_err());
     }
 
-    #[tokio::test]
-    async fn apply_stream_with_callback_can_be_used_for_progress_reporting() {
+    #[test]
+    fn apply_stream_with_callback_can_be_used_for_progress_reporting() {
         let initial = make_test_system();
         let (_, slot_type) = make_test_slot();
         let transition1 = Transition::InsertSlot {
@@ -346,21 +328,12 @@ mod tests {
         stream.append(transition1);
         stream.append(transition2);
         stream.append(transition3);
-        let progress = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
-        let progress_clone = progress.clone();
-        let result =
-            apply_stream_with_callback(&stream, &initial, move |index, _transition, system| {
-                let progress = progress_clone.clone();
-                let slot_count = system.slot_count();
-                async move {
-                    let mut progress = progress.lock().unwrap();
-                    progress.push((index, slot_count));
-                    Ok(())
-                }
-            })
-            .await
-            .unwrap();
-        let progress = progress.lock().unwrap();
+        let mut progress = Vec::new();
+        let result = apply_stream_with_callback(&stream, &initial, |index, _transition, system| {
+            progress.push((index, system.slot_count()));
+            Ok(())
+        })
+        .unwrap();
         assert_eq!(progress.len(), 3);
         assert_eq!(progress[0], (0, 1));
         assert_eq!(progress[1], (1, 2));
