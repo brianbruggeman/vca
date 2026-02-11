@@ -4,7 +4,6 @@ use crate::system::VCASystem;
 use crate::transitions::{Transition, TransitionError};
 use std::cmp::Ordering;
 use std::collections::HashMap;
-use thiserror::Error;
 
 /// Identifies a replica in the distributed system.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -22,10 +21,25 @@ pub struct Transaction {
     pub seq: u64,
 }
 
-#[derive(Error, Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum ReplayError {
-    #[error("transition error: {0:?}")]
-    TransitionError(#[from] TransitionError),
+    TransitionError(TransitionError),
+}
+
+impl std::fmt::Display for ReplayError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::TransitionError(e) => write!(f, "transition error: {e:?}"),
+        }
+    }
+}
+
+impl std::error::Error for ReplayError {}
+
+impl From<TransitionError> for ReplayError {
+    fn from(e: TransitionError) -> Self {
+        Self::TransitionError(e)
+    }
 }
 
 /// Lexicographic comparison of vector clocks for deterministic ordering.

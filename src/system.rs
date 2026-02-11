@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use crate::relation::Relation;
 use crate::slot::SlotId;
 use crate::types::{Family, SlotType};
-use thiserror::Error;
 
 /// Reference to the rule system ℛ governing admissibility.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -29,19 +28,28 @@ pub struct VCASystem {
     pub rule_ref: RuleRef,
 }
 
-#[derive(Error, Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum SystemError {
-    #[error("slot not found")]
     SlotNotFound,
-    #[error("type not well-formed")]
     TypeNotWellFormed,
-    #[error("position already occupied")]
     PositionOccupied,
-    #[error("upper bound violated")]
     UpperBoundViolated,
-    #[error("system would be empty")]
     WouldBeEmpty,
 }
+
+impl std::fmt::Display for SystemError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::SlotNotFound => write!(f, "slot not found"),
+            Self::TypeNotWellFormed => write!(f, "type not well-formed"),
+            Self::PositionOccupied => write!(f, "position already occupied"),
+            Self::UpperBoundViolated => write!(f, "upper bound violated"),
+            Self::WouldBeEmpty => write!(f, "system would be empty"),
+        }
+    }
+}
+
+impl std::error::Error for SystemError {}
 
 impl VCASystem {
     pub fn new(slot: SlotId, slot_type: SlotType) -> Result<Self, SystemError> {

@@ -1,19 +1,29 @@
 use crate::system::VCASystem;
 use crate::transitions::{Transition, TransitionError};
-use thiserror::Error;
 
 /// An ordered sequence of transitions applied as a unit.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DeltaStream(pub Vec<Transition>);
 
-#[derive(Error, Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum StreamError {
-    #[error("transition at index {index} failed: {error:?}")]
     TransitionFailed {
         index: usize,
         error: TransitionError,
     },
 }
+
+impl std::fmt::Display for StreamError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::TransitionFailed { index, error } => {
+                write!(f, "transition at index {index} failed: {error:?}")
+            }
+        }
+    }
+}
+
+impl std::error::Error for StreamError {}
 
 impl DeltaStream {
     pub fn empty() -> Self {

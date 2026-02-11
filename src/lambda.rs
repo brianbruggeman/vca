@@ -5,28 +5,61 @@ use crate::transitions::Transition;
 use crate::types::{
     Affinity, Family, Kind, LambdaKind, Layer, SlotType, TypeId, TypeMeta, UpperBound,
 };
-use thiserror::Error;
-
 /// Errors from L0 λ-calculus operations.
-#[derive(Error, Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum LambdaError {
-    #[error("slot {slot_id:?} not found in system")]
     SlotNotFound { slot_id: SlotId },
-    #[error("slot {slot_id:?} is not a lambda term")]
     NotLambdaTerm { slot_id: SlotId },
-    #[error("slot {slot_id:?} is not an application")]
     NotApplication { slot_id: SlotId },
-    #[error("slot {slot_id:?} is not an abstraction")]
     NotAbstraction { slot_id: SlotId },
-    #[error("application {app_id:?} missing func relation at position {pos}")]
     MissingFuncRelation { app_id: SlotId, pos: PosIndex },
-    #[error("application {app_id:?} missing arg relation at position {pos}")]
     MissingArgRelation { app_id: SlotId, pos: PosIndex },
-    #[error("abstraction {abs_id:?} missing binder relation at position {pos}")]
     MissingBinderRelation { abs_id: SlotId, pos: PosIndex },
-    #[error("abstraction {abs_id:?} missing body relation at position {pos}")]
     MissingBodyRelation { abs_id: SlotId, pos: PosIndex },
 }
+
+impl std::fmt::Display for LambdaError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::SlotNotFound { slot_id } => write!(f, "slot {slot_id:?} not found in system"),
+            Self::NotLambdaTerm { slot_id } => {
+                write!(f, "slot {slot_id:?} is not a lambda term")
+            }
+            Self::NotApplication { slot_id } => {
+                write!(f, "slot {slot_id:?} is not an application")
+            }
+            Self::NotAbstraction { slot_id } => {
+                write!(f, "slot {slot_id:?} is not an abstraction")
+            }
+            Self::MissingFuncRelation { app_id, pos } => {
+                write!(
+                    f,
+                    "application {app_id:?} missing func relation at position {pos}"
+                )
+            }
+            Self::MissingArgRelation { app_id, pos } => {
+                write!(
+                    f,
+                    "application {app_id:?} missing arg relation at position {pos}"
+                )
+            }
+            Self::MissingBinderRelation { abs_id, pos } => {
+                write!(
+                    f,
+                    "abstraction {abs_id:?} missing binder relation at position {pos}"
+                )
+            }
+            Self::MissingBodyRelation { abs_id, pos } => {
+                write!(
+                    f,
+                    "abstraction {abs_id:?} missing body relation at position {pos}"
+                )
+            }
+        }
+    }
+}
+
+impl std::error::Error for LambdaError {}
 
 /// Encodes a λ-variable as a slot with `Family::Lambda(Var)`.
 pub fn encode_var(name: &str) -> (SlotId, SlotType) {

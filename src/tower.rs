@@ -1,16 +1,26 @@
 use crate::coherence::is_coherent;
 use crate::system::{RuleRef, VCASystem};
-use thiserror::Error;
 
-#[derive(Error, Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum TowerError {
-    #[error("base system must be self-referential")]
     BaseNotSelfReferential,
-    #[error("invalid rule system: expected level {expected_level}")]
     InvalidRuleSystem { expected_level: usize },
-    #[error("level {level} is not coherent")]
     LevelNotCoherent { level: usize },
 }
+
+impl std::fmt::Display for TowerError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::BaseNotSelfReferential => write!(f, "base system must be self-referential"),
+            Self::InvalidRuleSystem { expected_level } => {
+                write!(f, "invalid rule system: expected level {expected_level}")
+            }
+            Self::LevelNotCoherent { level } => write!(f, "level {level} is not coherent"),
+        }
+    }
+}
+
+impl std::error::Error for TowerError {}
 
 /// Infinite stratified tower: each level's rules come from the level below.
 ///

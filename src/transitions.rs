@@ -3,7 +3,6 @@ use crate::relation::{PosIndex, Relation};
 use crate::slot::SlotId;
 use crate::system::{SystemError, VCASystem};
 use crate::types::SlotType;
-use thiserror::Error;
 
 /// The 5 Δ primitives that transform a VCASystem (Theorem 8).
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -15,12 +14,27 @@ pub enum Transition {
     Retype { v: SlotId, t: SlotType },
 }
 
-#[derive(Error, Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum TransitionError {
-    #[error("precondition failed: {0}")]
     PreconditionFailed(String),
-    #[error("system error: {0:?}")]
-    SystemError(#[from] SystemError),
+    SystemError(SystemError),
+}
+
+impl std::fmt::Display for TransitionError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::PreconditionFailed(msg) => write!(f, "precondition failed: {msg}"),
+            Self::SystemError(e) => write!(f, "system error: {e:?}"),
+        }
+    }
+}
+
+impl std::error::Error for TransitionError {}
+
+impl From<SystemError> for TransitionError {
+    fn from(e: SystemError) -> Self {
+        Self::SystemError(e)
+    }
 }
 
 impl Transition {
