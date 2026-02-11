@@ -13,10 +13,7 @@ use vca::{
 };
 
 fn normalize_system(mut system: VCASystem) -> VCASystem {
-    system.slots.sort_by_key(|s| s.0);
-    system
-        .relations
-        .sort_by_key(|r| (r.source.0, r.target.0, r.position));
+    system.normalize();
     system
 }
 
@@ -142,11 +139,11 @@ proptest! {
         let normalized_core2 = normalize_system(core2);
 
         prop_assert_eq!(
-            normalized_core1.slots, normalized_core2.slots,
+            normalized_core1.slots(), normalized_core2.slots(),
             "core(core(F)) must have same slots as core(F)"
         );
         prop_assert_eq!(
-            normalized_core1.relations, normalized_core2.relations,
+            normalized_core1.relations(), normalized_core2.relations(),
             "core(core(F)) must have same relations as core(F)"
         );
     }
@@ -163,11 +160,11 @@ proptest! {
         let normalized_core_r2 = normalize_system(core_r2);
 
         prop_assert_eq!(
-            normalized_core_r1.slots, normalized_core_r2.slots,
+            normalized_core_r1.slots(), normalized_core_r2.slots(),
             "core_r(core_r(F)) must have same slots as core_r(F)"
         );
         prop_assert_eq!(
-            normalized_core_r1.relations, normalized_core_r2.relations,
+            normalized_core_r1.relations(), normalized_core_r2.relations(),
             "core_r(core_r(F)) must have same relations as core_r(F)"
         );
     }
@@ -184,11 +181,11 @@ proptest! {
         let normalized_core_star2 = normalize_system(core_star2);
 
         prop_assert_eq!(
-            normalized_core_star1.slots, normalized_core_star2.slots,
+            normalized_core_star1.slots(), normalized_core_star2.slots(),
             "core_star(core_star(F)) must have same slots as core_star(F)"
         );
         prop_assert_eq!(
-            normalized_core_star1.relations, normalized_core_star2.relations,
+            normalized_core_star1.relations(), normalized_core_star2.relations(),
             "core_star(core_star(F)) must have same relations as core_star(F)"
         );
     }
@@ -226,11 +223,11 @@ proptest! {
                 let normalized_s2 = normalize_system(s2);
 
                 prop_assert_eq!(
-                    normalized_s1.slots, normalized_s2.slots,
+                    normalized_s1.slots(), normalized_s2.slots(),
                     "independent transitions must commute: slots differ"
                 );
                 prop_assert_eq!(
-                    normalized_s1.relations, normalized_s2.relations,
+                    normalized_s1.relations(), normalized_s2.relations(),
                     "independent transitions must commute: relations differ"
                 );
             }
@@ -262,7 +259,8 @@ fn arbitrary_transaction() -> impl Strategy<Value = Transaction> {
             0..10,
         ),
         (0u64..100).prop_map(vca::replay::ReplicaId),
-        prop::collection::hash_map((0u64..10).prop_map(vca::replay::ReplicaId), 0u64..100, 0..5),
+        prop::collection::hash_map((0u64..10).prop_map(vca::replay::ReplicaId), 0u64..100, 0..5)
+            .prop_map(vca::replay::VectorClock::from),
         (0u64..1000),
     )
         .prop_map(|(ops, origin, vc, seq)| Transaction {
@@ -294,11 +292,11 @@ proptest! {
                 let normalized_r2 = normalize_system(r2);
 
                 prop_assert_eq!(
-                    normalized_r1.slots, normalized_r2.slots,
+                    normalized_r1.slots(), normalized_r2.slots(),
                     "replay must be deterministic: slots differ"
                 );
                 prop_assert_eq!(
-                    normalized_r1.relations, normalized_r2.relations,
+                    normalized_r1.relations(), normalized_r2.relations(),
                     "replay must be deterministic: relations differ"
                 );
             }
@@ -340,11 +338,11 @@ proptest! {
                 let normalized_r2 = normalize_system(r2);
 
                 prop_assert_eq!(
-                    normalized_r1.slots, normalized_r2.slots,
+                    normalized_r1.slots(), normalized_r2.slots(),
                     "replay(H1 ∪ H2) must equal replay(H2 ∪ H1): slots differ"
                 );
                 prop_assert_eq!(
-                    normalized_r1.relations, normalized_r2.relations,
+                    normalized_r1.relations(), normalized_r2.relations(),
                     "replay(H1 ∪ H2) must equal replay(H2 ∪ H1): relations differ"
                 );
             }

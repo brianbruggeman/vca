@@ -279,7 +279,7 @@ fn theorem_8_delta_preserves_structure() {
 
         // test deleteslot (requires at least 2 slots)
         if initial_system.slot_count() > 1 {
-            let slot_to_delete = initial_system.slots[0];
+            let slot_to_delete = initial_system.slots()[0];
             let delete = Transition::DeleteSlot { v: slot_to_delete };
             if delete.precondition(&initial_system) {
                 let result = delete
@@ -294,8 +294,8 @@ fn theorem_8_delta_preserves_structure() {
 
         // test attach (requires at least 2 slots)
         if initial_system.slot_count() >= 2 {
-            let slot1 = initial_system.slots[0];
-            let slot2 = initial_system.slots[1];
+            let slot1 = initial_system.slots()[0];
+            let slot2 = initial_system.slots()[1];
             let attach = Transition::Attach {
                 u: slot1,
                 v: slot2,
@@ -327,7 +327,7 @@ fn theorem_8_delta_preserves_structure() {
         }
 
         // test retype
-        let slot_to_retype = initial_system.slots[0];
+        let slot_to_retype = initial_system.slots()[0];
         let new_type = SlotType {
             family: Family::Data,
             kind: Kind::Any,
@@ -530,7 +530,7 @@ fn theorem_2_all_relations_in_core_star_are_admissible() {
 
     for system in test_cases {
         let result = core_star(&system, &registry);
-        for relation in &result.relations {
+        for relation in result.relations() {
             assert!(
                 is_admissible(&result, relation),
                 "all relations in core_star(F) must be admissible"
@@ -672,7 +672,7 @@ fn theorem_1_shallow_access_interpretation_does_not_access_rule_relations() {
     };
 
     let mut system = VCASystem::new(data_slot1, data_type1.clone()).expect("should create system");
-    system.rule_ref = RuleRef::SelfRef;
+    system.set_rule_ref(RuleRef::SelfRef);
 
     let insert_data2 = Transition::InsertSlot {
         v: data_slot2,
@@ -779,7 +779,7 @@ fn theorem_1_shallow_access_interpretation_does_not_access_rule_rule_system() {
     };
 
     let mut system = VCASystem::new(data_slot1, data_type1.clone()).expect("should create system");
-    system.rule_ref = RuleRef::SelfRef;
+    system.set_rule_ref(RuleRef::SelfRef);
 
     let insert_data2 = Transition::InsertSlot {
         v: data_slot2,
@@ -816,10 +816,10 @@ fn theorem_1_shallow_access_interpretation_does_not_access_rule_rule_system() {
     };
     let mut external_system = VCASystem::new(external_rule_slot, external_rule_type)
         .expect("should create external system");
-    external_system.rule_ref = RuleRef::SelfRef;
+    external_system.set_rule_ref(RuleRef::SelfRef);
 
     let mut system_with_external_rules = system.clone();
-    system_with_external_rules.rule_ref = RuleRef::External(Box::new(external_system));
+    system_with_external_rules.set_rule_ref(RuleRef::External(Box::new(external_system)));
 
     let admissible_after_rule_rule_change =
         is_admissible(&system_with_external_rules, &test_relation);
@@ -885,7 +885,7 @@ fn theorem_1_shallow_access_interpretation_only_accesses_rule_slots_and_types() 
     };
 
     let mut system = VCASystem::new(data_slot1, data_type1.clone()).expect("should create system");
-    system.rule_ref = RuleRef::SelfRef;
+    system.set_rule_ref(RuleRef::SelfRef);
 
     let insert_data2 = Transition::InsertSlot {
         v: data_slot2,
@@ -975,7 +975,7 @@ fn theorem_1_shallow_access_self_referential_admissibility_terminates() {
     };
 
     let mut system = VCASystem::new(data_slot1, data_type1.clone()).expect("should create system");
-    system.rule_ref = RuleRef::SelfRef;
+    system.set_rule_ref(RuleRef::SelfRef);
 
     let insert_data2 = Transition::InsertSlot {
         v: data_slot2,
@@ -1048,7 +1048,7 @@ fn theorem_2_self_ref_coherent_iff_struct_and_admissible() {
     };
 
     let mut system = VCASystem::new(data_slot1, data_type1.clone()).expect("should create system");
-    system.rule_ref = RuleRef::SelfRef;
+    system.set_rule_ref(RuleRef::SelfRef);
 
     let insert_data2 = Transition::InsertSlot {
         v: data_slot2,
@@ -1069,7 +1069,7 @@ fn theorem_2_self_ref_coherent_iff_struct_and_admissible() {
         target: data_slot2,
         position: 0,
     };
-    system.relations.push(relation);
+    system.push_relation(relation);
 
     assert!(
         system.is_structurally_valid(),
@@ -1102,9 +1102,9 @@ fn theorem_2_self_ref_not_coherent_when_not_struct() {
     };
 
     let mut system = VCASystem::new(data_slot, data_type).expect("should create system");
-    system.rule_ref = RuleRef::SelfRef;
+    system.set_rule_ref(RuleRef::SelfRef);
 
-    system.slots.clear();
+    system.clear_slots();
 
     assert!(
         !system.is_structurally_valid(),
@@ -1160,7 +1160,7 @@ fn theorem_2_self_ref_not_coherent_when_not_admissible() {
     };
 
     let mut system = VCASystem::new(data_slot1, data_type1.clone()).expect("should create system");
-    system.rule_ref = RuleRef::SelfRef;
+    system.set_rule_ref(RuleRef::SelfRef);
 
     let insert_data2 = Transition::InsertSlot {
         v: data_slot2,
@@ -1181,7 +1181,7 @@ fn theorem_2_self_ref_not_coherent_when_not_admissible() {
         target: data_slot2,
         position: 0,
     };
-    system.relations.push(relation);
+    system.push_relation(relation);
 
     assert!(
         system.is_structurally_valid(),
@@ -1241,7 +1241,7 @@ fn theorem_2_self_ref_coherent_terminates_no_circularity() {
     };
 
     let mut system = VCASystem::new(data_slot1, data_type1.clone()).expect("should create system");
-    system.rule_ref = RuleRef::SelfRef;
+    system.set_rule_ref(RuleRef::SelfRef);
 
     let insert_data2 = Transition::InsertSlot {
         v: data_slot2,
@@ -1262,7 +1262,7 @@ fn theorem_2_self_ref_coherent_terminates_no_circularity() {
         target: data_slot2,
         position: 0,
     };
-    system.relations.push(relation);
+    system.push_relation(relation);
 
     let result = is_coherent(&system);
     assert!(
@@ -1305,7 +1305,7 @@ fn theorem_2_self_ref_coherent_terminates_even_with_complex_structure() {
     };
 
     let mut system = VCASystem::new(data_slot1, data_type.clone()).expect("should create system");
-    system.rule_ref = RuleRef::SelfRef;
+    system.set_rule_ref(RuleRef::SelfRef);
 
     let insert_data2 = Transition::InsertSlot {
         v: data_slot2,
@@ -1334,14 +1334,14 @@ fn theorem_2_self_ref_coherent_terminates_even_with_complex_structure() {
         target: data_slot2,
         position: 0,
     };
-    system.relations.push(relation1);
+    system.push_relation(relation1);
 
     let relation2 = Relation {
         source: data_slot2,
         target: data_slot3,
         position: 0,
     };
-    system.relations.push(relation2);
+    system.push_relation(relation2);
 
     let result = is_coherent(&system);
     assert!(
@@ -1372,7 +1372,7 @@ fn theorem_3_structural_validity_checks_nonempty() {
         "system with slots should be valid"
     );
 
-    system.slots.clear();
+    system.clear_slots();
 
     assert!(
         !system.is_structurally_valid(),
@@ -1412,7 +1412,7 @@ fn theorem_3_structural_validity_checks_total_types() {
         "system with all slots having types should be valid"
     );
 
-    system.types.remove(&slot2);
+    system.remove_type(&slot2);
 
     assert!(
         !system.is_structurally_valid(),
@@ -1453,7 +1453,7 @@ fn theorem_3_structural_validity_checks_position_uniqueness() {
         target: slot2,
         position: 0,
     };
-    system.relations.push(relation1);
+    system.push_relation(relation1);
 
     assert!(
         system.is_structurally_valid(),
@@ -1465,7 +1465,7 @@ fn theorem_3_structural_validity_checks_position_uniqueness() {
         target: slot2,
         position: 0,
     };
-    system.relations.push(relation2);
+    system.push_relation(relation2);
 
     assert!(
         !system.is_structurally_valid(),
@@ -1526,14 +1526,14 @@ fn theorem_3_structural_validity_checks_upper_bounds() {
         target: slot2,
         position: 0,
     };
-    system.relations.push(relation1);
+    system.push_relation(relation1);
 
     let relation2 = Relation {
         source: slot3,
         target: slot2,
         position: 1,
     };
-    system.relations.push(relation2);
+    system.push_relation(relation2);
 
     assert!(
         system.is_structurally_valid(),
@@ -1545,7 +1545,7 @@ fn theorem_3_structural_validity_checks_upper_bounds() {
         target: slot2,
         position: 2,
     };
-    system.relations.push(relation3);
+    system.push_relation(relation3);
 
     assert!(
         !system.is_structurally_valid(),
@@ -1592,7 +1592,7 @@ fn theorem_3_structural_validity_complexity_o_v_plus_a() {
             target,
             position: 0,
         };
-        system.relations.push(relation);
+        system.push_relation(relation);
     }
 
     let start = std::time::Instant::now();
@@ -1651,7 +1651,7 @@ fn theorem_4_admissibility_decidable_terminates() {
     };
 
     let mut system = VCASystem::new(data_slot1, data_type1).expect("should create system");
-    system.rule_ref = RuleRef::SelfRef;
+    system.set_rule_ref(RuleRef::SelfRef);
 
     let insert_data2 = Transition::InsertSlot {
         v: data_slot2,
@@ -1712,7 +1712,7 @@ fn theorem_4_admissibility_decidable_complexity_o_vr_m() {
     };
 
     let mut system = VCASystem::new(data_slot1, data_type1).expect("should create system");
-    system.rule_ref = RuleRef::SelfRef;
+    system.set_rule_ref(RuleRef::SelfRef);
 
     let insert_data2 = Transition::InsertSlot {
         v: data_slot2,
@@ -1805,7 +1805,7 @@ fn theorem_4_admissibility_decidable_returns_boolean_for_all_kinds() {
     for kind in kinds {
         let mut system =
             VCASystem::new(data_slot1, data_type1.clone()).expect("should create system");
-        system.rule_ref = RuleRef::SelfRef;
+        system.set_rule_ref(RuleRef::SelfRef);
 
         let insert_data2 = Transition::InsertSlot {
             v: data_slot2,
@@ -1874,9 +1874,8 @@ fn theorem_5_level_n_coherence_depends_only_on_n_and_n_minus_1() {
     };
 
     let mut base = VCASystem::new(rule_slot, rule_type).unwrap();
-    base.slots.push(data_slot);
-    base.types.insert(data_slot, data_type);
-    base.rule_ref = RuleRef::SelfRef;
+    base.add_slot(data_slot, data_type);
+    base.set_rule_ref(RuleRef::SelfRef);
 
     // create level 1
     let level1_slot = SlotId(3);
@@ -1891,7 +1890,7 @@ fn theorem_5_level_n_coherence_depends_only_on_n_and_n_minus_1() {
         meta: TypeMeta::None,
     };
     let mut level1 = VCASystem::new(level1_slot, level1_type).unwrap();
-    level1.rule_ref = RuleRef::External(Box::new(base.clone()));
+    level1.set_rule_ref(RuleRef::External(Box::new(base.clone())));
 
     // create level 2
     let level2_slot = SlotId(4);
@@ -1906,7 +1905,7 @@ fn theorem_5_level_n_coherence_depends_only_on_n_and_n_minus_1() {
         meta: TypeMeta::None,
     };
     let mut level2 = VCASystem::new(level2_slot, level2_type).unwrap();
-    level2.rule_ref = RuleRef::External(Box::new(level1.clone()));
+    level2.set_rule_ref(RuleRef::External(Box::new(level1.clone())));
 
     // build tower with levels 0, 1, 2
     let mut tower = Tower::new(base.clone()).unwrap();
@@ -1942,12 +1941,12 @@ fn theorem_5_level_n_coherence_depends_only_on_n_and_n_minus_1() {
     // create new level 1 with rule_ref pointing to modified base
     // but keep V^(1) and τ^(1) the same
     let mut modified_level1 = level1.clone();
-    modified_level1.rule_ref = RuleRef::External(Box::new(modified_base.clone()));
+    modified_level1.set_rule_ref(RuleRef::External(Box::new(modified_base.clone())));
 
     // create new level 2 with rule_ref pointing to modified level 1
     // but keep V^(2) and τ^(2) the same
     let mut modified_level2 = level2.clone();
-    modified_level2.rule_ref = RuleRef::External(Box::new(modified_level1.clone()));
+    modified_level2.set_rule_ref(RuleRef::External(Box::new(modified_level1.clone())));
 
     // create new tower with modified base and updated level 1, but same V^(2) and τ^(2)
     let mut modified_tower = Tower::new(modified_base).unwrap();
@@ -1994,9 +1993,8 @@ fn theorem_5_modifying_level_k_does_not_affect_levels_less_than_k() {
     };
 
     let mut base = VCASystem::new(rule_slot, rule_type).unwrap();
-    base.slots.push(data_slot);
-    base.types.insert(data_slot, data_type);
-    base.rule_ref = RuleRef::SelfRef;
+    base.add_slot(data_slot, data_type);
+    base.set_rule_ref(RuleRef::SelfRef);
 
     // create level 1
     let level1_slot = SlotId(3);
@@ -2011,7 +2009,7 @@ fn theorem_5_modifying_level_k_does_not_affect_levels_less_than_k() {
         meta: TypeMeta::None,
     };
     let mut level1 = VCASystem::new(level1_slot, level1_type).unwrap();
-    level1.rule_ref = RuleRef::External(Box::new(base.clone()));
+    level1.set_rule_ref(RuleRef::External(Box::new(base.clone())));
 
     // create level 2
     let level2_slot = SlotId(4);
@@ -2026,7 +2024,7 @@ fn theorem_5_modifying_level_k_does_not_affect_levels_less_than_k() {
         meta: TypeMeta::None,
     };
     let mut level2 = VCASystem::new(level2_slot, level2_type).unwrap();
-    level2.rule_ref = RuleRef::External(Box::new(level1.clone()));
+    level2.set_rule_ref(RuleRef::External(Box::new(level1.clone())));
 
     // build tower with levels 0, 1, 2
     let mut tower = Tower::new(base.clone()).unwrap();
@@ -2113,9 +2111,8 @@ fn theorem_5_level_n_coherence_uses_only_slots_and_types_from_n_minus_1() {
     };
 
     let mut base = VCASystem::new(rule_slot, rule_type).unwrap();
-    base.slots.push(data_slot);
-    base.types.insert(data_slot, data_type);
-    base.rule_ref = RuleRef::SelfRef;
+    base.add_slot(data_slot, data_type);
+    base.set_rule_ref(RuleRef::SelfRef);
 
     // create level 1 with a relation
     let level1_slot1 = SlotId(3);
@@ -2131,7 +2128,7 @@ fn theorem_5_level_n_coherence_uses_only_slots_and_types_from_n_minus_1() {
         meta: TypeMeta::None,
     };
     let mut level1 = VCASystem::new(level1_slot1, level1_type.clone()).unwrap();
-    level1.rule_ref = RuleRef::External(Box::new(base.clone()));
+    level1.set_rule_ref(RuleRef::External(Box::new(base.clone())));
 
     // add second slot to level 1
     let insert_slot2 = Transition::InsertSlot {
@@ -2163,7 +2160,7 @@ fn theorem_5_level_n_coherence_uses_only_slots_and_types_from_n_minus_1() {
         meta: TypeMeta::None,
     };
     let mut level2 = VCASystem::new(level2_slot, level2_type).unwrap();
-    level2.rule_ref = RuleRef::External(Box::new(level1.clone()));
+    level2.set_rule_ref(RuleRef::External(Box::new(level1.clone())));
 
     // build tower
     let mut tower = Tower::new(base.clone()).unwrap();
@@ -2176,7 +2173,7 @@ fn theorem_5_level_n_coherence_uses_only_slots_and_types_from_n_minus_1() {
     // modify level 1's relations (A^(1)) - this should NOT affect level 2 coherence
     // because level 2 only uses V^(1) and τ^(1) from level 1, not A^(1)
     let mut modified_level1 = level1.clone();
-    modified_level1.relations.clear();
+    modified_level1.clear_relations();
 
     // create new tower with modified level 1 (relations removed)
     let mut modified_tower = Tower::new(base.clone()).unwrap();
@@ -2222,9 +2219,8 @@ fn theorem_6_tower_coherence_is_greatest_fixed_point_all_prefixes_coherent() {
     };
 
     let mut base = VCASystem::new(rule_slot, rule_type).unwrap();
-    base.slots.push(data_slot);
-    base.types.insert(data_slot, data_type);
-    base.rule_ref = RuleRef::SelfRef;
+    base.add_slot(data_slot, data_type);
+    base.set_rule_ref(RuleRef::SelfRef);
 
     let mut tower = Tower::new(base.clone()).unwrap();
 
@@ -2243,7 +2239,7 @@ fn theorem_6_tower_coherence_is_greatest_fixed_point_all_prefixes_coherent() {
         };
         let prev_level = tower.level((i - 1) as usize).unwrap().clone();
         let mut level = VCASystem::new(level_slot, level_type).unwrap();
-        level.rule_ref = RuleRef::External(Box::new(prev_level));
+        level.set_rule_ref(RuleRef::External(Box::new(prev_level)));
         tower.push_level(level).unwrap();
     }
 
@@ -2298,9 +2294,8 @@ fn theorem_6_tower_coherence_gfp_characterization_incoherent_tower() {
     };
 
     let mut base = VCASystem::new(rule_slot, rule_type_none).unwrap();
-    base.slots.push(data_slot);
-    base.types.insert(data_slot, data_type);
-    base.rule_ref = RuleRef::SelfRef;
+    base.add_slot(data_slot, data_type);
+    base.set_rule_ref(RuleRef::SelfRef);
 
     let mut tower = Tower::new(base.clone()).unwrap();
 
@@ -2318,9 +2313,9 @@ fn theorem_6_tower_coherence_gfp_characterization_incoherent_tower() {
     };
 
     let mut level1 = VCASystem::new(level1_data_slot, level1_data_type).unwrap();
-    level1.rule_ref = RuleRef::External(Box::new(base));
+    level1.set_rule_ref(RuleRef::External(Box::new(base)));
     // add a relation that won't be admissible under base (which has Kind::None)
-    level1.relations.push(Relation {
+    level1.push_relation(Relation {
         source: level1_data_slot,
         target: level1_data_slot,
         position: 0,
@@ -2385,9 +2380,8 @@ fn theorem_6_finite_prefix_decidable_terminates() {
     };
 
     let mut base = VCASystem::new(rule_slot, rule_type).unwrap();
-    base.slots.push(data_slot);
-    base.types.insert(data_slot, data_type);
-    base.rule_ref = RuleRef::SelfRef;
+    base.add_slot(data_slot, data_type);
+    base.set_rule_ref(RuleRef::SelfRef);
 
     let mut tower = Tower::new(base.clone()).unwrap();
 
@@ -2406,7 +2400,7 @@ fn theorem_6_finite_prefix_decidable_terminates() {
         };
         let prev_level = tower.level((i - 1) as usize).unwrap().clone();
         let mut level = VCASystem::new(level_slot, level_type).unwrap();
-        level.rule_ref = RuleRef::External(Box::new(prev_level));
+        level.set_rule_ref(RuleRef::External(Box::new(prev_level)));
         tower.push_level(level).unwrap();
     }
 
@@ -2460,9 +2454,8 @@ fn theorem_6_finite_prefix_decidable_complexity() {
     };
 
     let mut base = VCASystem::new(rule_slot, rule_type).unwrap();
-    base.slots.push(data_slot);
-    base.types.insert(data_slot, data_type);
-    base.rule_ref = RuleRef::SelfRef;
+    base.add_slot(data_slot, data_type);
+    base.set_rule_ref(RuleRef::SelfRef);
 
     let mut tower = Tower::new(base.clone()).unwrap();
 
@@ -2481,7 +2474,7 @@ fn theorem_6_finite_prefix_decidable_complexity() {
         };
         let prev_level = tower.level((i - 1) as usize).unwrap().clone();
         let mut level = VCASystem::new(level_slot, level_type).unwrap();
-        level.rule_ref = RuleRef::External(Box::new(prev_level));
+        level.set_rule_ref(RuleRef::External(Box::new(prev_level)));
         tower.push_level(level).unwrap();
     }
 
@@ -2534,9 +2527,8 @@ fn theorem_6_coinductive_interpretation_no_violation_found() {
     };
 
     let mut base = VCASystem::new(rule_slot, rule_type).unwrap();
-    base.slots.push(data_slot);
-    base.types.insert(data_slot, data_type);
-    base.rule_ref = RuleRef::SelfRef;
+    base.add_slot(data_slot, data_type);
+    base.set_rule_ref(RuleRef::SelfRef);
 
     let mut tower = Tower::new(base.clone()).unwrap();
 
@@ -2555,7 +2547,7 @@ fn theorem_6_coinductive_interpretation_no_violation_found() {
         };
         let prev_level = tower.level((i - 1) as usize).unwrap().clone();
         let mut level = VCASystem::new(level_slot, level_type).unwrap();
-        level.rule_ref = RuleRef::External(Box::new(prev_level));
+        level.set_rule_ref(RuleRef::External(Box::new(prev_level)));
         tower.push_level(level).unwrap();
     }
 
@@ -2606,9 +2598,8 @@ fn theorem_7_finite_prefix_decidable_terminates() {
     };
 
     let mut base = VCASystem::new(rule_slot, rule_type).unwrap();
-    base.slots.push(data_slot);
-    base.types.insert(data_slot, data_type);
-    base.rule_ref = RuleRef::SelfRef;
+    base.add_slot(data_slot, data_type);
+    base.set_rule_ref(RuleRef::SelfRef);
 
     let mut tower = Tower::new(base.clone()).unwrap();
 
@@ -2627,7 +2618,7 @@ fn theorem_7_finite_prefix_decidable_terminates() {
         };
         let prev_level = tower.level((i - 1) as usize).unwrap().clone();
         let mut level = VCASystem::new(level_slot, level_type).unwrap();
-        level.rule_ref = RuleRef::External(Box::new(prev_level));
+        level.set_rule_ref(RuleRef::External(Box::new(prev_level)));
         tower.push_level(level).unwrap();
     }
 
@@ -2695,9 +2686,8 @@ fn theorem_7_finite_prefix_decidable_complexity_o_n_a_v_m() {
         };
 
         let mut base = VCASystem::new(rule_slot, rule_type).unwrap();
-        base.slots.push(data_slot);
-        base.types.insert(data_slot, data_type);
-        base.rule_ref = RuleRef::SelfRef;
+        base.add_slot(data_slot, data_type);
+        base.set_rule_ref(RuleRef::SelfRef);
 
         let mut tower = Tower::new(base.clone()).unwrap();
 
@@ -2718,7 +2708,7 @@ fn theorem_7_finite_prefix_decidable_complexity_o_n_a_v_m() {
                 },
             )
             .unwrap();
-            level.rule_ref = RuleRef::External(Box::new(prev_level));
+            level.set_rule_ref(RuleRef::External(Box::new(prev_level)));
 
             // add slots to this level
             for j in 1..slots_per_level {
@@ -2741,12 +2731,12 @@ fn theorem_7_finite_prefix_decidable_complexity_o_n_a_v_m() {
             }
 
             // add relations to this level
-            let level_slots: Vec<SlotId> = level.slots.to_vec();
+            let level_slots: Vec<SlotId> = level.slots().to_vec();
             for j in 0..relations_per_level.min(level_slots.len().saturating_sub(1)) {
                 if level_slots.len() >= 2 {
                     let source = level_slots[j % level_slots.len()];
                     let target = level_slots[(j + 1) % level_slots.len()];
-                    level.relations.push(Relation {
+                    level.push_relation(Relation {
                         source,
                         target,
                         position: (j % 10) as u32,
@@ -2821,7 +2811,7 @@ fn theorem_9_core_star_produces_coherent() {
             meta: TypeMeta::None,
         };
         let mut system = VCASystem::new(data_slot, data_type).expect("should create system");
-        system.rule_ref = RuleRef::Empty;
+        system.set_rule_ref(RuleRef::Empty);
 
         // add a relation that should be admissible (kind::any admits all)
         let data_slot2 = SlotId(2);
@@ -2840,7 +2830,7 @@ fn theorem_9_core_star_produces_coherent() {
             t: data_type2,
         };
         system = insert.apply(&system).expect("should insert slot");
-        system.relations.push(Relation {
+        system.push_relation(Relation {
             source: data_slot,
             target: data_slot2,
             position: 0,
@@ -2874,7 +2864,7 @@ fn theorem_9_core_star_produces_coherent() {
         };
         let mut external_system =
             VCASystem::new(external_rule_slot, external_rule_type).expect("should create system");
-        external_system.rule_ref = RuleRef::SelfRef;
+        external_system.set_rule_ref(RuleRef::SelfRef);
 
         // verify external system is coherent
         assert!(
@@ -2895,7 +2885,7 @@ fn theorem_9_core_star_produces_coherent() {
             meta: TypeMeta::None,
         };
         let mut system = VCASystem::new(data_slot, data_type).expect("should create system");
-        system.rule_ref = RuleRef::External(Box::new(external_system.clone()));
+        system.set_rule_ref(RuleRef::External(Box::new(external_system.clone())));
 
         // add a relation
         let data_slot2 = SlotId(2);
@@ -2914,7 +2904,7 @@ fn theorem_9_core_star_produces_coherent() {
             t: data_type2,
         };
         system = insert.apply(&system).expect("should insert slot");
-        system.relations.push(Relation {
+        system.push_relation(Relation {
             source: data_slot,
             target: data_slot2,
             position: 0,
@@ -2959,12 +2949,11 @@ fn theorem_9_core_star_produces_coherent() {
         };
 
         let mut system = VCASystem::new(rule_slot, rule_type).expect("should create system");
-        system.slots.push(data_slot);
-        system.types.insert(data_slot, data_type);
-        system.rule_ref = RuleRef::SelfRef;
+        system.add_slot(data_slot, data_type);
+        system.set_rule_ref(RuleRef::SelfRef);
 
         // add a relation
-        system.relations.push(Relation {
+        system.push_relation(Relation {
             source: data_slot,
             target: data_slot,
             position: 0,
@@ -3010,12 +2999,11 @@ fn theorem_9_core_star_produces_coherent() {
         };
 
         let mut system = VCASystem::new(rule_slot, rule_type).expect("should create system");
-        system.slots.push(data_slot);
-        system.types.insert(data_slot, data_type);
-        system.rule_ref = RuleRef::Empty;
+        system.add_slot(data_slot, data_type);
+        system.set_rule_ref(RuleRef::Empty);
 
         // add inadmissible relation (no valid rule to admit it)
-        system.relations.push(Relation {
+        system.push_relation(Relation {
             source: data_slot,
             target: data_slot,
             position: 0,
@@ -3033,13 +3021,13 @@ fn theorem_9_core_star_produces_coherent() {
         );
         // verify invalid rule was removed
         assert!(
-            !result.slots.contains(&rule_slot),
+            !result.contains_slot(rule_slot),
             "invalid rule slot should be removed by core_star"
         );
         // verify inadmissible relation was removed (or system has no valid rules to admit it)
         // with empty rule system, only kind::any admits, so relation should be removed
         assert_eq!(
-            result.relations.len(),
+            result.relation_count(),
             0,
             "inadmissible relation should be removed by core_star"
         );
@@ -3067,7 +3055,7 @@ fn theorem_10_core_star_idempotent() {
             meta: TypeMeta::None,
         };
         let mut system = VCASystem::new(data_slot, data_type).expect("should create system");
-        system.rule_ref = RuleRef::Empty;
+        system.set_rule_ref(RuleRef::Empty);
 
         // add a relation
         let data_slot2 = SlotId(2);
@@ -3086,7 +3074,7 @@ fn theorem_10_core_star_idempotent() {
             t: data_type2,
         };
         system = insert.apply(&system).expect("should insert slot");
-        system.relations.push(Relation {
+        system.push_relation(Relation {
             source: data_slot,
             target: data_slot2,
             position: 0,
@@ -3096,15 +3084,15 @@ fn theorem_10_core_star_idempotent() {
         let result2 = core_star(&result1, &registry);
 
         assert_eq!(
-            result1.slots, result2.slots,
+            result1.slots(), result2.slots(),
             "core_star should be idempotent for slots (r = ∅ case)"
         );
         assert_eq!(
-            result1.relations, result2.relations,
+            result1.relations(), result2.relations(),
             "core_star should be idempotent for relations (r = ∅ case)"
         );
         assert_eq!(
-            result1.types, result2.types,
+            result1.types_map(), result2.types_map(),
             "core_star should be idempotent for types (r = ∅ case)"
         );
     }
@@ -3125,7 +3113,7 @@ fn theorem_10_core_star_idempotent() {
         };
         let mut external_system =
             VCASystem::new(external_rule_slot, external_rule_type).expect("should create system");
-        external_system.rule_ref = RuleRef::SelfRef;
+        external_system.set_rule_ref(RuleRef::SelfRef);
 
         // create main system with external rule reference
         let data_slot = SlotId(1);
@@ -3140,7 +3128,7 @@ fn theorem_10_core_star_idempotent() {
             meta: TypeMeta::None,
         };
         let mut system = VCASystem::new(data_slot, data_type).expect("should create system");
-        system.rule_ref = RuleRef::External(Box::new(external_system.clone()));
+        system.set_rule_ref(RuleRef::External(Box::new(external_system.clone())));
 
         // add a relation
         let data_slot2 = SlotId(2);
@@ -3159,7 +3147,7 @@ fn theorem_10_core_star_idempotent() {
             t: data_type2,
         };
         system = insert.apply(&system).expect("should insert slot");
-        system.relations.push(Relation {
+        system.push_relation(Relation {
             source: data_slot,
             target: data_slot2,
             position: 0,
@@ -3169,15 +3157,15 @@ fn theorem_10_core_star_idempotent() {
         let result2 = core_star(&result1, &registry);
 
         assert_eq!(
-            result1.slots, result2.slots,
+            result1.slots(), result2.slots(),
             "core_star should be idempotent for slots (r ∈ fs_coh case)"
         );
         assert_eq!(
-            result1.relations, result2.relations,
+            result1.relations(), result2.relations(),
             "core_star should be idempotent for relations (r ∈ fs_coh case)"
         );
         assert_eq!(
-            result1.types, result2.types,
+            result1.types_map(), result2.types_map(),
             "core_star should be idempotent for types (r ∈ fs_coh case)"
         );
     }
@@ -3209,12 +3197,11 @@ fn theorem_10_core_star_idempotent() {
         };
 
         let mut system = VCASystem::new(rule_slot, rule_type).expect("should create system");
-        system.slots.push(data_slot);
-        system.types.insert(data_slot, data_type);
-        system.rule_ref = RuleRef::SelfRef;
+        system.add_slot(data_slot, data_type);
+        system.set_rule_ref(RuleRef::SelfRef);
 
         // add a relation
-        system.relations.push(Relation {
+        system.push_relation(Relation {
             source: data_slot,
             target: data_slot,
             position: 0,
@@ -3224,15 +3211,15 @@ fn theorem_10_core_star_idempotent() {
         let result2 = core_star(&result1, &registry);
 
         assert_eq!(
-            result1.slots, result2.slots,
+            result1.slots(), result2.slots(),
             "core_star should be idempotent for slots (r = f case)"
         );
         assert_eq!(
-            result1.relations, result2.relations,
+            result1.relations(), result2.relations(),
             "core_star should be idempotent for relations (r = f case)"
         );
         assert_eq!(
-            result1.types, result2.types,
+            result1.types_map(), result2.types_map(),
             "core_star should be idempotent for types (r = f case)"
         );
     }
@@ -3265,12 +3252,11 @@ fn theorem_10_core_star_idempotent() {
         };
 
         let mut system = VCASystem::new(rule_slot, rule_type).expect("should create system");
-        system.slots.push(data_slot);
-        system.types.insert(data_slot, data_type);
-        system.rule_ref = RuleRef::Empty;
+        system.add_slot(data_slot, data_type);
+        system.set_rule_ref(RuleRef::Empty);
 
         // add inadmissible relation
-        system.relations.push(Relation {
+        system.push_relation(Relation {
             source: data_slot,
             target: data_slot,
             position: 0,
@@ -3280,15 +3266,15 @@ fn theorem_10_core_star_idempotent() {
         let result2 = core_star(&result1, &registry);
 
         assert_eq!(
-            result1.slots, result2.slots,
+            result1.slots(), result2.slots(),
             "core_star should be idempotent even when input has invalid rules"
         );
         assert_eq!(
-            result1.relations, result2.relations,
+            result1.relations(), result2.relations(),
             "core_star should be idempotent even when input has inadmissible relations"
         );
         assert_eq!(
-            result1.types, result2.types,
+            result1.types_map(), result2.types_map(),
             "core_star should be idempotent for types even with invalid input"
         );
     }
@@ -3303,12 +3289,7 @@ fn theorem_11_independent_transitions_commute() {
     use vca::independence::is_independent;
 
     fn normalize_system(mut system: VCASystem) -> VCASystem {
-        // sort slots for consistent comparison (order doesn't matter semantically)
-        system.slots.sort_by_key(|s| s.0);
-        // sort relations for consistent comparison (order doesn't matter semantically)
-        system
-            .relations
-            .sort_by_key(|r| (r.source.0, r.target.0, r.position));
+        system.normalize();
         system
     }
 
@@ -3367,15 +3348,15 @@ fn theorem_11_independent_transitions_commute() {
         let normalized_t2_t1 = normalize_system(system_t2_t1);
 
         assert_eq!(
-            normalized_t1_t2.slots, normalized_t2_t1.slots,
+            normalized_t1_t2.slots(), normalized_t2_t1.slots(),
             "independent InsertSlot transitions must commute (slots)"
         );
         assert_eq!(
-            normalized_t1_t2.relations, normalized_t2_t1.relations,
+            normalized_t1_t2.relations(), normalized_t2_t1.relations(),
             "independent InsertSlot transitions must commute (relations)"
         );
         assert_eq!(
-            normalized_t1_t2.types, normalized_t2_t1.types,
+            normalized_t1_t2.types_map(), normalized_t2_t1.types_map(),
             "independent InsertSlot transitions must commute (types)"
         );
     }
@@ -3394,7 +3375,7 @@ fn theorem_11_independent_transitions_commute() {
             meta: TypeMeta::None,
         };
         let mut system = VCASystem::new(rule_slot, rule_type).expect("should create system");
-        system.rule_ref = RuleRef::SelfRef;
+        system.set_rule_ref(RuleRef::SelfRef);
 
         let slot1 = SlotId(1);
         let slot2 = SlotId(2);
@@ -3411,10 +3392,8 @@ fn theorem_11_independent_transitions_commute() {
         };
 
         // add slots to system
-        system.slots.push(slot2);
-        system.slots.push(slot3);
-        system.types.insert(slot2, data_type.clone());
-        system.types.insert(slot3, data_type);
+        system.add_slot(slot2, data_type.clone());
+        system.add_slot(slot3, data_type);
 
         let t1 = Transition::Attach {
             u: slot1,
@@ -3445,15 +3424,15 @@ fn theorem_11_independent_transitions_commute() {
         let normalized_t2_t1 = normalize_system(system_t2_t1);
 
         assert_eq!(
-            normalized_t1_t2.slots, normalized_t2_t1.slots,
+            normalized_t1_t2.slots(), normalized_t2_t1.slots(),
             "independent Attach transitions must commute (slots)"
         );
         assert_eq!(
-            normalized_t1_t2.relations, normalized_t2_t1.relations,
+            normalized_t1_t2.relations(), normalized_t2_t1.relations(),
             "independent Attach transitions must commute (relations)"
         );
         assert_eq!(
-            normalized_t1_t2.types, normalized_t2_t1.types,
+            normalized_t1_t2.types_map(), normalized_t2_t1.types_map(),
             "independent Attach transitions must commute (types)"
         );
     }
@@ -3498,8 +3477,7 @@ fn theorem_11_independent_transitions_commute() {
         };
 
         // add slot2 to system
-        system.slots.push(slot2);
-        system.types.insert(slot2, data_type1.clone());
+        system.add_slot(slot2, data_type1.clone());
 
         let t1 = Transition::Retype {
             v: slot1,
@@ -3528,15 +3506,15 @@ fn theorem_11_independent_transitions_commute() {
         let normalized_t2_t1 = normalize_system(system_t2_t1);
 
         assert_eq!(
-            normalized_t1_t2.slots, normalized_t2_t1.slots,
+            normalized_t1_t2.slots(), normalized_t2_t1.slots(),
             "independent Retype transitions must commute (slots)"
         );
         assert_eq!(
-            normalized_t1_t2.relations, normalized_t2_t1.relations,
+            normalized_t1_t2.relations(), normalized_t2_t1.relations(),
             "independent Retype transitions must commute (relations)"
         );
         assert_eq!(
-            normalized_t1_t2.types, normalized_t2_t1.types,
+            normalized_t1_t2.types_map(), normalized_t2_t1.types_map(),
             "independent Retype transitions must commute (types)"
         );
     }
@@ -3607,10 +3585,7 @@ fn theorem_12_replay_convergence() {
     }
 
     fn normalize_system(mut system: VCASystem) -> VCASystem {
-        system.slots.sort_by_key(|s| s.0);
-        system
-            .relations
-            .sort_by_key(|r| (r.source.0, r.target.0, r.position));
+        system.normalize();
         system
     }
 
@@ -3653,15 +3628,15 @@ fn theorem_12_replay_convergence() {
         let normalized2 = normalize_system(result2);
 
         assert_eq!(
-            normalized1.slots, normalized2.slots,
+            normalized1.slots(), normalized2.slots(),
             "same history + same initial should produce same result (slots)"
         );
         assert_eq!(
-            normalized1.relations, normalized2.relations,
+            normalized1.relations(), normalized2.relations(),
             "same history + same initial should produce same result (relations)"
         );
         assert_eq!(
-            normalized1.types, normalized2.types,
+            normalized1.types_map(), normalized2.types_map(),
             "same history + same initial should produce same result (types)"
         );
     }
@@ -3731,15 +3706,15 @@ fn theorem_12_replay_convergence() {
         let normalized2 = normalize_system(result2);
 
         assert_eq!(
-            normalized1.slots, normalized2.slots,
+            normalized1.slots(), normalized2.slots(),
             "different orderings should converge to same result (slots)"
         );
         assert_eq!(
-            normalized1.relations, normalized2.relations,
+            normalized1.relations(), normalized2.relations(),
             "different orderings should converge to same result (relations)"
         );
         assert_eq!(
-            normalized1.types, normalized2.types,
+            normalized1.types_map(), normalized2.types_map(),
             "different orderings should converge to same result (types)"
         );
     }
@@ -3834,15 +3809,15 @@ fn theorem_12_replay_convergence() {
         let normalized2 = normalize_system(result2);
 
         assert_eq!(
-            normalized1.slots, normalized2.slots,
+            normalized1.slots(), normalized2.slots(),
             "complex scenario: different orderings should converge (slots)"
         );
         assert_eq!(
-            normalized1.relations, normalized2.relations,
+            normalized1.relations(), normalized2.relations(),
             "complex scenario: different orderings should converge (relations)"
         );
         assert_eq!(
-            normalized1.types, normalized2.types,
+            normalized1.types_map(), normalized2.types_map(),
             "complex scenario: different orderings should converge (types)"
         );
     }
@@ -3868,7 +3843,7 @@ fn theorem_13_box_coinductive() {
             meta: TypeMeta::None,
         };
         let mut system = VCASystem::new(slot_id, slot_type).expect("test system should be valid");
-        system.rule_ref = RuleRef::SelfRef;
+        system.set_rule_ref(RuleRef::SelfRef);
         system
     }
 
@@ -3882,7 +3857,7 @@ fn theorem_13_box_coinductive() {
             let level = make_coherent_system();
             let prev_level = tower.level(tower.height() - 1).unwrap().clone();
             let mut next_level = level;
-            next_level.rule_ref = RuleRef::External(Box::new(prev_level));
+            next_level.set_rule_ref(RuleRef::External(Box::new(prev_level)));
             tower.push_level(next_level).expect("push should succeed");
         }
 
@@ -3917,10 +3892,10 @@ fn theorem_13_box_coinductive() {
         };
         let mut rule_system =
             VCASystem::new(rule_slot, rule_type_none).expect("should create rule system");
-        rule_system.rule_ref = RuleRef::SelfRef;
+        rule_system.set_rule_ref(RuleRef::SelfRef);
 
         // push the rule system as level 1
-        rule_system.rule_ref = RuleRef::External(Box::new(tower.level(0).unwrap().clone()));
+        rule_system.set_rule_ref(RuleRef::External(Box::new(tower.level(0).unwrap().clone())));
         tower
             .push_level(rule_system)
             .expect("push rule system should succeed");
@@ -3940,7 +3915,7 @@ fn theorem_13_box_coinductive() {
         };
         let mut bad_level =
             VCASystem::new(data_slot1, data_type.clone()).expect("should create level");
-        bad_level.rule_ref = RuleRef::External(Box::new(tower.level(1).unwrap().clone()));
+        bad_level.set_rule_ref(RuleRef::External(Box::new(tower.level(1).unwrap().clone())));
 
         // add second slot and a relation
         let insert_slot2 = Transition::InsertSlot {
@@ -3956,7 +3931,7 @@ fn theorem_13_box_coinductive() {
             target: data_slot2,
             position: 0,
         };
-        bad_level.relations.push(relation);
+        bad_level.push_relation(relation);
 
         // system is structurally valid but has inadmissible relation (Kind::None rejects all)
         assert!(
@@ -4001,7 +3976,7 @@ fn theorem_13_box_coinductive() {
             let level = make_coherent_system();
             let prev_level = tower.level(tower.height() - 1).unwrap().clone();
             let mut next_level = level;
-            next_level.rule_ref = RuleRef::External(Box::new(prev_level));
+            next_level.set_rule_ref(RuleRef::External(Box::new(prev_level)));
             tower.push_level(next_level).expect("push should succeed");
         }
 
@@ -4041,10 +4016,10 @@ fn theorem_13_box_coinductive() {
         };
         let mut rule_system =
             VCASystem::new(rule_slot, rule_type_none).expect("should create rule system");
-        rule_system.rule_ref = RuleRef::SelfRef;
+        rule_system.set_rule_ref(RuleRef::SelfRef);
 
         // push the rule system as level 1
-        rule_system.rule_ref = RuleRef::External(Box::new(tower.level(0).unwrap().clone()));
+        rule_system.set_rule_ref(RuleRef::External(Box::new(tower.level(0).unwrap().clone())));
         tower
             .push_level(rule_system)
             .expect("push rule system should succeed");
@@ -4064,7 +4039,7 @@ fn theorem_13_box_coinductive() {
         };
         let mut bad_level =
             VCASystem::new(data_slot1, data_type.clone()).expect("should create level");
-        bad_level.rule_ref = RuleRef::External(Box::new(tower.level(1).unwrap().clone()));
+        bad_level.set_rule_ref(RuleRef::External(Box::new(tower.level(1).unwrap().clone())));
 
         let insert_slot2 = Transition::InsertSlot {
             v: data_slot2,
@@ -4079,7 +4054,7 @@ fn theorem_13_box_coinductive() {
             target: data_slot2,
             position: 0,
         };
-        bad_level.relations.push(relation);
+        bad_level.push_relation(relation);
 
         tower.push_level(bad_level).expect("push should succeed");
 
@@ -4088,7 +4063,7 @@ fn theorem_13_box_coinductive() {
             let level = make_coherent_system();
             let prev_level = tower.level(tower.height() - 1).unwrap().clone();
             let mut next_level = level;
-            next_level.rule_ref = RuleRef::External(Box::new(prev_level));
+            next_level.set_rule_ref(RuleRef::External(Box::new(prev_level)));
             tower.push_level(next_level).expect("push should succeed");
         }
 
@@ -4122,7 +4097,7 @@ fn theorem_14_diamond_inductive() {
             meta: TypeMeta::None,
         };
         let mut system = VCASystem::new(slot_id, slot_type).expect("test system should be valid");
-        system.rule_ref = RuleRef::SelfRef;
+        system.set_rule_ref(RuleRef::SelfRef);
         system
     }
 
@@ -4142,7 +4117,7 @@ fn theorem_14_diamond_inductive() {
         };
         let mut rule_system =
             VCASystem::new(rule_slot, rule_type_none).expect("should create rule system");
-        rule_system.rule_ref = RuleRef::SelfRef;
+        rule_system.set_rule_ref(RuleRef::SelfRef);
 
         // add a data slot and a relation that will be inadmissible
         let data_slot = SlotId(1);
@@ -4170,7 +4145,7 @@ fn theorem_14_diamond_inductive() {
             target: data_slot,
             position: 0,
         };
-        bad_system.relations.push(relation);
+        bad_system.push_relation(relation);
 
         bad_system
     }
@@ -4191,7 +4166,7 @@ fn theorem_14_diamond_inductive() {
         };
         let mut bad_level =
             VCASystem::new(data_slot1, data_type.clone()).expect("should create level");
-        bad_level.rule_ref = RuleRef::External(Box::new(rule_system.clone()));
+        bad_level.set_rule_ref(RuleRef::External(Box::new(rule_system.clone())));
 
         // add second slot and a relation
         let insert_slot2 = Transition::InsertSlot {
@@ -4207,7 +4182,7 @@ fn theorem_14_diamond_inductive() {
             target: data_slot2,
             position: 0,
         };
-        bad_level.relations.push(relation);
+        bad_level.push_relation(relation);
 
         bad_level
     }
@@ -4240,7 +4215,7 @@ fn theorem_14_diamond_inductive() {
         };
         let mut witness_level =
             VCASystem::new(witness_slot, witness_type).expect("should create witness level");
-        witness_level.rule_ref = RuleRef::External(Box::new(prev_level));
+        witness_level.set_rule_ref(RuleRef::External(Box::new(prev_level)));
         tower
             .push_level(witness_level)
             .expect("push should succeed");
@@ -4353,7 +4328,7 @@ fn theorem_14_diamond_inductive() {
         };
         let mut witness_level =
             VCASystem::new(witness_slot, witness_type).expect("should create witness level");
-        witness_level.rule_ref = RuleRef::External(Box::new(prev_level));
+        witness_level.set_rule_ref(RuleRef::External(Box::new(prev_level)));
         tower
             .push_level(witness_level)
             .expect("push should succeed");
@@ -4403,7 +4378,7 @@ fn theorem_14_diamond_inductive() {
         };
         let mut witness_level =
             VCASystem::new(witness_slot, witness_type).expect("should create witness level");
-        witness_level.rule_ref = RuleRef::External(Box::new(prev_level));
+        witness_level.set_rule_ref(RuleRef::External(Box::new(prev_level)));
         tower
             .push_level(witness_level)
             .expect("push should succeed");
@@ -4461,9 +4436,8 @@ fn theorem_15_sla_finite_prefix_decidable() {
         };
 
         let mut base = VCASystem::new(rule_slot, rule_type).unwrap();
-        base.slots.push(data_slot);
-        base.types.insert(data_slot, data_type);
-        base.rule_ref = RuleRef::SelfRef;
+        base.add_slot(data_slot, data_type);
+        base.set_rule_ref(RuleRef::SelfRef);
 
         let mut tower = Tower::new(base).unwrap();
 
@@ -4481,7 +4455,7 @@ fn theorem_15_sla_finite_prefix_decidable() {
             };
             let prev_level = tower.level(i - 1).unwrap().clone();
             let mut level = VCASystem::new(level_slot, level_type).unwrap();
-            level.rule_ref = RuleRef::External(Box::new(prev_level));
+            level.set_rule_ref(RuleRef::External(Box::new(prev_level)));
             tower.push_level(level).unwrap();
         }
 
@@ -4737,9 +4711,8 @@ fn theorem_16_tower_coh_iff_always_coherent() {
         };
 
         let mut system = VCASystem::new(rule_slot, rule_type).unwrap();
-        system.slots.push(data_slot);
-        system.types.insert(data_slot, data_type);
-        system.rule_ref = RuleRef::SelfRef;
+        system.add_slot(data_slot, data_type);
+        system.set_rule_ref(RuleRef::SelfRef);
         system
     }
 
@@ -4772,7 +4745,7 @@ fn theorem_16_tower_coh_iff_always_coherent() {
         meta: TypeMeta::None,
     };
     let mut level1 = VCASystem::new(level1_slot, level1_type).unwrap();
-    level1.rule_ref = RuleRef::External(Box::new(tower2.base().clone()));
+    level1.set_rule_ref(RuleRef::External(Box::new(tower2.base().clone())));
     tower2.push_level(level1).unwrap();
 
     let max_level2 = tower2.height() - 1;
@@ -4797,7 +4770,7 @@ fn theorem_16_tower_coh_iff_always_coherent() {
         meta: TypeMeta::None,
     };
     let mut incoherent_base = VCASystem::new(rule_slot, rule_type).unwrap();
-    incoherent_base.rule_ref = RuleRef::SelfRef;
+    incoherent_base.set_rule_ref(RuleRef::SelfRef);
     let mut incoherent_tower = Tower::new(incoherent_base).unwrap();
 
     let level1_slot2 = SlotId(4);
@@ -4812,8 +4785,8 @@ fn theorem_16_tower_coh_iff_always_coherent() {
         meta: TypeMeta::None,
     };
     let mut level1_incoherent = VCASystem::new(level1_slot2, level1_type2).unwrap();
-    level1_incoherent.rule_ref = RuleRef::External(Box::new(incoherent_tower.base().clone()));
-    level1_incoherent.relations.push(Relation {
+    level1_incoherent.set_rule_ref(RuleRef::External(Box::new(incoherent_tower.base().clone())));
+    level1_incoherent.push_relation(Relation {
         source: level1_slot2,
         target: level1_slot2,
         position: 0,

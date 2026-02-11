@@ -18,14 +18,10 @@ pub enum RuleRef {
 /// The VCA 4-tuple `F = (V, A, τ, ℛ)`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct VCASystem {
-    /// V: non-empty set of slots.
-    pub slots: Vec<SlotId>,
-    /// A ⊆ V × V × I: directed relations with position indices.
-    pub relations: Vec<Relation>,
-    /// τ: V → T: total type assignment.
-    pub types: HashMap<SlotId, SlotType>,
-    /// ℛ: the rule system governing admissibility.
-    pub rule_ref: RuleRef,
+    pub(crate) slots: Vec<SlotId>,
+    pub(crate) relations: Vec<Relation>,
+    pub(crate) types: HashMap<SlotId, SlotType>,
+    pub(crate) rule_ref: RuleRef,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -134,6 +130,57 @@ impl VCASystem {
             }
         }
         true
+    }
+
+    pub fn slots(&self) -> &[SlotId] {
+        &self.slots
+    }
+
+    pub fn relations(&self) -> &[Relation] {
+        &self.relations
+    }
+
+    pub fn types_map(&self) -> &HashMap<SlotId, SlotType> {
+        &self.types
+    }
+
+    pub fn rule_ref(&self) -> &RuleRef {
+        &self.rule_ref
+    }
+
+    pub fn relation_count(&self) -> usize {
+        self.relations.len()
+    }
+
+    pub fn add_slot(&mut self, id: SlotId, t: SlotType) {
+        self.slots.push(id);
+        self.types.insert(id, t);
+    }
+
+    pub fn push_relation(&mut self, rel: Relation) {
+        self.relations.push(rel);
+    }
+
+    pub fn set_rule_ref(&mut self, r: RuleRef) {
+        self.rule_ref = r;
+    }
+
+    pub fn remove_type(&mut self, id: &SlotId) -> Option<SlotType> {
+        self.types.remove(id)
+    }
+
+    pub fn clear_slots(&mut self) {
+        self.slots.clear();
+    }
+
+    pub fn clear_relations(&mut self) {
+        self.relations.clear();
+    }
+
+    pub fn normalize(&mut self) {
+        self.slots.sort_by_key(|s| s.0);
+        self.relations
+            .sort_by_key(|r| (r.source.0, r.target.0, r.position));
     }
 
     pub fn is_structurally_valid(&self) -> bool {
