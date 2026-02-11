@@ -48,7 +48,8 @@ Qed.
 Theorem box_prefix_decidable : forall phi T k,
   {always_prefix phi T k = true} + {always_prefix phi T k = false}.
 Proof.
-  intros phi T k. destruct (always_prefix phi T k) eqn:E.
+  intros phi T k. unfold always_prefix.
+  destruct (forallb (fun n => phi (T n)) (seq 0 (S k))) eqn:E.
   - left. reflexivity.
   - right. reflexivity.
 Qed.
@@ -74,7 +75,8 @@ Qed.
 Theorem diamond_prefix_decidable : forall phi T k,
   {eventually_prefix phi T k = true} + {eventually_prefix phi T k = false}.
 Proof.
-  intros phi T k. destruct (eventually_prefix phi T k) eqn:E.
+  intros phi T k. unfold eventually_prefix.
+  destruct (existsb (fun n => phi (T n)) (seq 0 (S k))) eqn:E.
   - left. reflexivity.
   - right. reflexivity.
 Qed.
@@ -126,29 +128,32 @@ Definition sla_prefix (sla : SLA) (T : Tower) (k : nat) : bool :=
 Theorem sla_finite_prefix_decidable : forall sla T k,
   {sla_prefix sla T k = true} + {sla_prefix sla T k = false}.
 Proof.
-  intros sla T k. destruct (sla_prefix sla T k) eqn:E.
+  intros sla T k. unfold sla_prefix.
+  destruct (forallb (fun n => sla_satisfied_at sla (T n)) (seq 0 (S k))) eqn:E.
   - left. reflexivity.
   - right. reflexivity.
 Qed.
 
-(* Theorem 16: Tower Satisfies SLA iff □(sla_satisfied_at) *)
-Theorem tower_satisfies_sla : forall sla T,
-  sla_satisfied sla T <-> always (sla_satisfied_at sla) T.
+Theorem tower_coherent_base_coh : forall T,
+  tower_coherent T -> FS_coh (T 0).
 Proof.
-  intros sla T. split.
-  - intro H. exact H.
-  - intro H. exact H.
+  intros T H. unfold FS_coh. exact (H 0).
 Qed.
 
-(* Theorem 16 Corollary: SLA verification via prefix checking *)
+Theorem tower_coherent_struct : forall T,
+  tower_coherent T -> always FS_struct_b T.
+Proof.
+  intros T Hcoh n.
+  specialize (Hcoh n).
+  destruct n; simpl in Hcoh.
+  - unfold local_coh_0, FS_coh_b in Hcoh.
+    apply andb_prop in Hcoh. destruct Hcoh as [Hstruct _]. exact Hstruct.
+  - apply andb_prop in Hcoh. destruct Hcoh as [Hstruct _]. exact Hstruct.
+Qed.
+
 Theorem sla_verification_coinductive : forall sla T,
   sla_satisfied sla T <-> (forall k, sla_prefix sla T k = true).
 Proof.
-  intros sla T.
-  rewrite tower_satisfies_sla.
-  rewrite box_coinductive.
-  split.
-  - intro H. intro k. exact (H k).
-  - intro H. intro k. exact (H k).
+  intros sla T. apply box_coinductive.
 Qed.
 
