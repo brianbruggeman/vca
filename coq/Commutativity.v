@@ -48,6 +48,11 @@ Definition disjoint_slots (d1 d2 : Transition) : bool :=
 Definition independent (d1 d2 : Transition) : bool :=
   disjoint_slots d1 d2.
 
+Lemma Slot_eqb_refl : forall v, Slot_eqb v v = true.
+Proof.
+  intro v. unfold Slot_eqb. destruct (Slot_eq_dec v v); [reflexivity | contradiction].
+Qed.
+
 Lemma Slot_eqb_sym : forall x y, Slot_eqb x y = Slot_eqb y x.
 Proof.
   intros x y. unfold Slot_eqb.
@@ -514,18 +519,12 @@ Qed.
 
 Definition replay := apply_stream.
 
-Theorem replay_deterministic : forall s F1 F2,
-  F1 = F2 ->
-  replay s F1 = replay s F2.
+Theorem replay_functional : forall s F F1 F2,
+  replay s F = Some F1 ->
+  replay s F = Some F2 ->
+  F1 = F2.
 Proof.
-  intros s F1 F2 Heq. subst. reflexivity.
-Qed.
-
-Theorem replay_convergence_trivial : forall s F0,
-  forall (replica1 replica2 : unit),
-  replay s F0 = replay s F0.
-Proof.
-  intros. reflexivity.
+  intros s F F1 F2 H1 H2. rewrite H1 in H2. injection H2. auto.
 Qed.
 
 Definition all_pairwise_independent (s : Stream) : Prop :=
@@ -588,34 +587,31 @@ Proof.
   exact apply_stream_append.
 Qed.
 
-Definition sorted_stream (compare : Transition -> Transition -> bool) (s : Stream) : Stream := s.
-
-Theorem convergence_with_sort : forall (compare : Transition -> Transition -> bool) (H : Stream) F0,
-  replay (sorted_stream compare H) F0 = replay (sorted_stream compare H) F0.
-Proof.
-  intros. reflexivity.
-Qed.
-
-Theorem crdt_join_commutative : forall H1 H2 F0,
-  replay (H1 ++ H2) F0 = replay (H1 ++ H2) F0.
-Proof.
-  intros. reflexivity.
-Qed.
-
-Theorem crdt_join_idempotent_history : forall H F0,
-  replay H F0 = replay H F0.
-Proof.
-  intros. reflexivity.
-Qed.
-
 (* Operational Transformation (OT) Properties
    OT is a technique for collaborative editing where concurrent operations
    are transformed to achieve convergence. VCA subsumes OT because:
    1. Independent operations commute directly (no transform needed)
    2. Dependent operations use Core* for conflict resolution *)
 
-Definition ot_transform (d1 d2 : Transition) : Transition * Transition :=
-  (d1, d2).
+Definition apply_opt_effect (od : option Transition) (F : SlotSystem) : SlotSystem :=
+  match od with
+  | None => F
+  | Some d => apply_effect d F
+  end.
+
+Definition ot_transform (d1 d2 : Transition) : option Transition * option Transition :=
+  if independent d1 d2 then (Some d1, Some d2)
+  else match d1, d2 with
+  | DeleteSlot v1, DeleteSlot v2 =>
+      if Slot_eqb v1 v2 then (None, None) else (Some d1, Some d2)
+  | Retype v1 t1, Retype v2 _ =>
+      if Slot_eqb v1 v2 then (Some (Retype v1 t1), Some (Retype v1 t1))
+      else (Some d1, Some d2)
+  | InsertSlot v1 t1, InsertSlot v2 _ =>
+      if Slot_eqb v1 v2 then (Some (Retype v1 t1), None)
+      else (Some d1, Some d2)
+  | _, _ => (Some d1, Some d2)
+  end.
 
 Theorem ot_independent_no_transform : forall d1 d2 F,
   independent d1 d2 = true ->
@@ -626,15 +622,42 @@ Proof.
   exact independent_effects_commute_equiv.
 Qed.
 
-Theorem ot_convergence_property : forall d1 d2 F,
-  independent d1 d2 = true ->
+Theorem ot_convergence : forall d1 d2 F,
+  independent d1 d2 = true \/
+  (exists v, d1 = DeleteSlot v /\ d2 = DeleteSlot v) \/
+  (exists v t1 t2, d1 = Retype v t1 /\ d2 = Retype v t2) \/
+  (exists v t1 t2, d1 = InsertSlot v t1 /\ d2 = InsertSlot v t2) ->
   let (d1', d2') := ot_transform d1 d2 in
   slot_system_equiv
-    (apply_effect d1' (apply_effect d2 F))
-    (apply_effect d2' (apply_effect d1 F)).
+    (apply_opt_effect d1' (apply_effect d2 F))
+    (apply_opt_effect d2' (apply_effect d1 F)).
 Proof.
-  intros d1 d2 F Hind. simpl.
-  apply independent_effects_commute_equiv. exact Hind.
+  intros d1 d2 F Hcase.
+  destruct Hcase as [Hind | [[v [Hd1 Hd2]] | [[v [t1 [t2 [Hd1 Hd2]]]] | [v [t1 [t2 [Hd1 Hd2]]]]]]].
+  - unfold ot_transform. rewrite Hind. simpl.
+    apply independent_effects_commute_equiv. exact Hind.
+  - subst. assert (Hrefl : Slot_eqb v v = true) by (apply Slot_eqb_refl).
+    unfold ot_transform. replace (independent (DeleteSlot v) (DeleteSlot v)) with false
+      by (unfold independent, disjoint_slots; rewrite Hrefl; reflexivity).
+    rewrite Hrefl. simpl. apply trivial_slot_system_equiv.
+  - subst. assert (Hrefl : Slot_eqb v v = true) by (apply Slot_eqb_refl).
+    unfold ot_transform. replace (independent (Retype v t1) (Retype v t2)) with false
+      by (unfold independent, disjoint_slots; rewrite Hrefl; reflexivity).
+    rewrite Hrefl. simpl.
+    unfold apply_opt_effect, apply_effect, effect_Retype, slot_system_equiv.
+    refine (conj _ (conj _ (conj _ _))); [intro; tauto | intro; tauto | | reflexivity].
+    intro x.
+    cbv [apply_opt_effect apply_effect effect_Retype type_of update_type].
+    destruct (Slot_eq_dec x v); reflexivity.
+  - subst. assert (Hrefl : Slot_eqb v v = true) by (apply Slot_eqb_refl).
+    unfold ot_transform. replace (independent (InsertSlot v t1) (InsertSlot v t2)) with false
+      by (unfold independent, disjoint_slots; rewrite Hrefl; reflexivity).
+    rewrite Hrefl. simpl.
+    unfold apply_opt_effect, apply_effect, effect_Retype, effect_InsertSlot, slot_system_equiv.
+    refine (conj _ (conj _ (conj _ _))); [intro; simpl; tauto | intro; simpl; tauto | | reflexivity].
+    intro x.
+    cbv [apply_opt_effect apply_effect effect_Retype effect_InsertSlot type_of update_type].
+    destruct (Slot_eq_dec x v); reflexivity.
 Qed.
 
 Lemma slot_system_equiv_trans : forall F1 F2 F3,
