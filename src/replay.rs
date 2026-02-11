@@ -93,7 +93,7 @@ pub fn eval(
                 current = core_star(&next, registry);
             }
             Err(_) => {
-                // skip invalid transitions, continue replay
+                // §12 Theorem 12: skip-on-error policy (Invalid Transition Policies)
             }
         }
     }

@@ -5,6 +5,9 @@ use crate::transitions::Transition;
 use crate::types::{
     Affinity, Family, Kind, LambdaKind, Layer, SlotType, TypeId, TypeMeta, UpperBound,
 };
+
+const ABS_DISCRIMINANT: u64 = 0xabcd;
+const APP_DISCRIMINANT: u64 = 0xdcba;
 /// Errors from L0 λ-calculus operations.
 #[derive(Debug, PartialEq, Eq)]
 pub enum LambdaError {
@@ -87,7 +90,7 @@ pub fn encode_abs(binder: SlotId, body: SlotId) -> Vec<Transition> {
             .0
             .wrapping_mul(31)
             .wrapping_add(body.0)
-            .wrapping_add(0xabcd),
+            .wrapping_add(ABS_DISCRIMINANT),
     );
     let abs_type = SlotType {
         family: Family::Lambda(LambdaKind::Abs),
@@ -122,7 +125,7 @@ pub fn encode_app(func: SlotId, arg: SlotId) -> Vec<Transition> {
         func.0
             .wrapping_mul(31)
             .wrapping_add(arg.0)
-            .wrapping_add(0xdcba),
+            .wrapping_add(APP_DISCRIMINANT),
     );
     let app_type = SlotType {
         family: Family::Lambda(LambdaKind::App),
