@@ -5,18 +5,27 @@ use crate::slot::SlotId;
 use crate::types::{Family, SlotType};
 use thiserror::Error;
 
+/// Reference to the rule system ℛ governing admissibility.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum RuleRef {
+    /// No rule system.
     Empty,
+    /// Self-referential: ℛ = F (the system governs itself).
     SelfRef,
+    /// External rule system from a different level.
     External(Box<VCASystem>),
 }
 
+/// The VCA 4-tuple `F = (V, A, τ, ℛ)`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct VCASystem {
+    /// V: non-empty set of slots.
     pub slots: Vec<SlotId>,
+    /// A ⊆ V × V × I: directed relations with position indices.
     pub relations: Vec<Relation>,
+    /// τ: V → T: total type assignment.
     pub types: HashMap<SlotId, SlotType>,
+    /// ℛ: the rule system governing admissibility.
     pub rule_ref: RuleRef,
 }
 

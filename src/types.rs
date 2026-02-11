@@ -1,3 +1,4 @@
+/// Slot family: the primary categorization dimension.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Family {
     Top,
@@ -14,6 +15,7 @@ pub enum LambdaKind {
     App,
 }
 
+/// Interpretation selector: determines how a rule admits relations.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Kind {
     Top,
@@ -24,6 +26,7 @@ pub enum Kind {
     Eq,
 }
 
+/// Stratification layer in the tower.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Layer {
     Top,
@@ -31,6 +34,7 @@ pub enum Layer {
     N(u32),
 }
 
+/// Connection mode for a slot.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Affinity {
     Top,
@@ -45,9 +49,11 @@ pub enum UpperBound {
     Infinite,
 }
 
+/// Unique type identifier.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct TypeId(pub u64);
 
+/// Domain-specific metadata attached to a type (patterns, id pairs, etc.).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum TypeMeta {
     None,
@@ -86,6 +92,7 @@ impl std::hash::Hash for TypeMeta {
     }
 }
 
+/// Complete type assignment for a slot: 8 dimensions from the parametric type space T.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct SlotType {
     pub family: Family,

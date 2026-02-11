@@ -2,6 +2,7 @@ use crate::system::VCASystem;
 use crate::transitions::{Transition, TransitionError};
 use thiserror::Error;
 
+/// An ordered sequence of transitions applied as a unit.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DeltaStream(pub Vec<Transition>);
 
@@ -42,6 +43,7 @@ impl DeltaStream {
     }
 }
 
+/// Applies all transitions in a stream sequentially, failing on first error.
 pub fn apply_stream(stream: &DeltaStream, initial: &VCASystem) -> Result<VCASystem, StreamError> {
     let mut current = initial.clone();
     for (index, transition) in stream.0.iter().enumerate() {
@@ -52,6 +54,7 @@ pub fn apply_stream(stream: &DeltaStream, initial: &VCASystem) -> Result<VCASyst
     Ok(current)
 }
 
+/// Applies a stream with a callback invoked before each transition.
 pub fn apply_stream_with_callback<F>(
     stream: &DeltaStream,
     initial: &VCASystem,

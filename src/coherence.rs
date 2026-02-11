@@ -1,6 +1,7 @@
 use crate::admissibility::is_admissible;
 use crate::system::VCASystem;
 
+/// Returns true if every relation in A is admissible under the system's rules.
 pub fn all_admissible(system: &VCASystem) -> bool {
     system
         .relations
@@ -8,6 +9,7 @@ pub fn all_admissible(system: &VCASystem) -> bool {
         .all(|rel| is_admissible(system, rel))
 }
 
+/// Returns true if the system is structurally valid and all relations are admissible (Theorem 2).
 pub fn is_coherent(system: &VCASystem) -> bool {
     if !system.is_structurally_valid() {
         return false;

@@ -1,6 +1,7 @@
 use crate::registry::KindRegistry;
 use crate::system::VCASystem;
 
+/// Tower stratification level: L0 (computation), L1 (transitions), L2 (specification), LN (meta).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Level {
     L0,
@@ -15,6 +16,7 @@ impl Level {
     }
 }
 
+/// Determines the stratification level of a system from its rule slots.
 pub fn system_level(system: &VCASystem, registry: &KindRegistry) -> Level {
     let rule_slots = system.rule_slots();
 

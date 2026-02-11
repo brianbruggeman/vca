@@ -1,3 +1,4 @@
+/// A value in a type dimension: Top (wildcard), Bot (empty), Named, or Num.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum DimValue {
     Top,
@@ -6,6 +7,7 @@ pub enum DimValue {
     Num(u64),
 }
 
+/// A named dimension in the parametric type space with a finite domain.
 #[derive(Clone, Debug)]
 pub struct Dimension {
     pub name: String,
@@ -18,6 +20,7 @@ impl Dimension {
     }
 }
 
+/// The product type space `T = ∏(d ∈ D) T_d`.
 #[derive(Clone, Debug)]
 pub struct TypeSpace {
     pub dimensions: Vec<Dimension>,
@@ -37,6 +40,7 @@ impl TypeSpace {
     }
 }
 
+/// A type expressed as a vector of dimension values, supporting Top/Bot matching.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ParametricSlotType {
     values: Vec<DimValue>,

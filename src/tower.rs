@@ -12,6 +12,9 @@ pub enum TowerError {
     LevelNotCoherent { level: usize },
 }
 
+/// Infinite stratified tower: each level's rules come from the level below.
+///
+/// Coherence is coinductive — verified over finite prefixes (Theorems 5-7).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Tower {
     levels: Vec<VCASystem>,

@@ -1,5 +1,6 @@
 use crate::system::VCASystem;
 
+/// L2 temporal logic formula over state predicates: □, ◇, U, ○ (Theorems 13-16).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum TemporalFormula<P> {
     Prop(P),

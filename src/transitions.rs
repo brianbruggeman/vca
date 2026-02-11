@@ -5,6 +5,7 @@ use crate::system::{SystemError, VCASystem};
 use crate::types::SlotType;
 use thiserror::Error;
 
+/// The 5 Δ primitives that transform a VCASystem (Theorem 8).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Transition {
     InsertSlot { v: SlotId, t: SlotType },
@@ -23,6 +24,7 @@ pub enum TransitionError {
 }
 
 impl Transition {
+    /// Returns true if this transition's preconditions hold in the given system.
     pub fn precondition(&self, system: &VCASystem) -> bool {
         match self {
             Transition::InsertSlot { v, t } => !system.contains_slot(*v) && t.is_well_formed(),
@@ -78,6 +80,7 @@ impl Transition {
         }
     }
 
+    /// Applies this transition to produce a new system, preserving structural validity.
     pub fn apply(&self, system: &VCASystem) -> Result<VCASystem, TransitionError> {
         if !self.precondition(system) {
             return Err(TransitionError::PreconditionFailed(format!(
@@ -127,6 +130,7 @@ impl Transition {
     }
 }
 
+/// Convenience wrapper for [`Transition::apply`].
 pub fn apply_transition(
     transition: &Transition,
     system: &VCASystem,

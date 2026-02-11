@@ -5,6 +5,7 @@ use crate::system::VCASystem;
 use crate::types::{Affinity, Family, Kind, Layer, SlotType, TypeId, TypeMeta, UpperBound};
 use std::collections::{HashMap, HashSet};
 
+/// Removes inadmissible relations, preserving slots and types.
 pub fn core(system: &VCASystem) -> VCASystem {
     let admissible_relations: Vec<_> = system
         .relations
@@ -33,6 +34,7 @@ fn is_valid_rule_locus(system: &VCASystem, registry: &KindRegistry, locus: SlotI
     registry.lookup(slot_type.kind).is_some()
 }
 
+/// Removes rule slots with unregistered kinds, preserving valid loci.
 pub fn core_r(system: &VCASystem, registry: &KindRegistry) -> VCASystem {
     let valid_loci: Vec<SlotId> = system
         .slots
@@ -89,6 +91,7 @@ pub fn core_r(system: &VCASystem, registry: &KindRegistry) -> VCASystem {
     }
 }
 
+/// Composes `core(core_r(F))` — produces a coherent system from any input (Theorem 9).
 pub fn core_star(system: &VCASystem, registry: &KindRegistry) -> VCASystem {
     core(&core_r(system, registry))
 }

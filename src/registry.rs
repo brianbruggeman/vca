@@ -5,6 +5,7 @@ use crate::stratification::Level;
 use crate::types::Kind;
 use std::collections::HashMap;
 
+/// Maps rule kinds to their interpretation functions and stratification levels.
 pub struct KindRegistry {
     interpretations: HashMap<Kind, Box<dyn Interpretation>>,
     levels: HashMap<Kind, Level>,

@@ -1,3 +1,12 @@
+//! Verified Computation Algebra (VCA) — a unified framework combining structure,
+//! computation, and specification in a single 4-tuple `(V, A, τ, ℛ)`.
+//!
+//! VCA provides:
+//! - **L0**: λ-calculus encoding (terms as slots, β-reduction as transitions)
+//! - **L1**: Transition primitives with CRDT replay semantics
+//! - **L2**: Temporal logic operators (□, ◇, U) over tower states
+//! - **Tower**: Infinite stratified meta-reasoning with coinductive coherence
+
 pub mod admissibility;
 pub mod coherence;
 pub mod constraint;
@@ -18,7 +27,6 @@ pub mod tower;
 pub mod transitions;
 pub mod types;
 
-// re-exports for convenience
 pub use admissibility::{
     InterpretAny, InterpretEq, InterpretNone, InterpretPatternMatch, Interpretation, RuleMetadata,
     admits, is_admissible,

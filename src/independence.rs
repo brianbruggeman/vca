@@ -5,6 +5,7 @@ use crate::slot::SlotId;
 use crate::system::VCASystem;
 use crate::transitions::Transition;
 
+/// A read/write location in the system: a slot, relation, or type assignment.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Location {
     Slot(SlotId),
@@ -12,6 +13,7 @@ pub enum Location {
     Type(SlotId),
 }
 
+/// Returns the set of locations read by a transition's precondition check.
 pub fn read_set(transition: &Transition, system: &VCASystem) -> HashSet<Location> {
     let mut locations = HashSet::new();
 
@@ -52,6 +54,7 @@ pub fn read_set(transition: &Transition, system: &VCASystem) -> HashSet<Location
     locations
 }
 
+/// Returns the set of locations modified by a transition's effect.
 pub fn write_set(transition: &Transition, system: &VCASystem) -> HashSet<Location> {
     let mut locations = HashSet::new();
 
@@ -84,6 +87,7 @@ pub fn write_set(transition: &Transition, system: &VCASystem) -> HashSet<Locatio
     locations
 }
 
+/// Returns true if two transitions commute: disjoint read/write sets (Theorem 11).
 pub fn is_independent(t1: &Transition, t2: &Transition, system: &VCASystem) -> bool {
     if !t1.precondition(system) || !t2.precondition(system) {
         return false;

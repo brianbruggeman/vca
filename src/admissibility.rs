@@ -4,6 +4,7 @@ use crate::system::VCASystem;
 use crate::types::{SlotType, TypeMeta};
 use std::collections::HashSet;
 
+/// Rule interpretation function: determines whether a relation is admitted.
 pub trait Interpretation {
     fn interpret(
         &self,
@@ -14,6 +15,7 @@ pub trait Interpretation {
     ) -> bool;
 }
 
+/// Admits all relations unconditionally.
 pub struct InterpretAny;
 
 impl Interpretation for InterpretAny {
@@ -28,6 +30,7 @@ impl Interpretation for InterpretAny {
     }
 }
 
+/// Admits no relations.
 pub struct InterpretNone;
 
 impl Interpretation for InterpretNone {
@@ -42,12 +45,14 @@ impl Interpretation for InterpretNone {
     }
 }
 
+/// Metadata extracted from a rule slot for interpretation.
 pub struct RuleMetadata {
     pub pattern_source: SlotType,
     pub pattern_target: SlotType,
     pub pos_predicate: Box<dyn Fn(PosIndex) -> bool>,
 }
 
+/// Admits relations where source and target types match given patterns.
 pub struct InterpretPatternMatch {
     pub pattern_source: Box<SlotType>,
     pub pattern_target: Box<SlotType>,
@@ -69,6 +74,7 @@ impl Interpretation for InterpretPatternMatch {
     }
 }
 
+/// Admits relations at a specific position where source/target id pairs match.
 pub struct InterpretEq {
     pub i_eq: PosIndex,
     pub id_pairs: HashSet<(u64, u64)>,
@@ -91,6 +97,7 @@ impl Interpretation for InterpretEq {
     }
 }
 
+/// Returns true if the given rule slot admits the relation.
 pub fn admits(system: &VCASystem, rule: SlotId, relation: &Relation) -> bool {
     let Some(rule_type) = system.type_of(rule) else {
         return false;
@@ -133,6 +140,7 @@ pub fn admits(system: &VCASystem, rule: SlotId, relation: &Relation) -> bool {
     interpretation.interpret(rule_type, t_src, t_tgt, relation.position)
 }
 
+/// Returns true if any rule in the system admits the relation (Theorem 4).
 pub fn is_admissible(system: &VCASystem, relation: &Relation) -> bool {
     let rule_slots = system.rule_slots();
     for rule in rule_slots {

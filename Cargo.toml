@@ -8,6 +8,7 @@ resolver = "2"
 name = "vca"
 version = "0.1.0"
 edition = "2024"
+license = "MIT"
 
 [dependencies]
 thiserror = "2.0.17"

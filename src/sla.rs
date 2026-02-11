@@ -8,6 +8,7 @@ use crate::temporal::TemporalFormula;
 use crate::tower::Tower;
 use crate::types::SlotType;
 
+/// Atomic predicates over VCASystem state for SLA specifications.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum StatePredicate {
     Coherent,
@@ -17,6 +18,7 @@ pub enum StatePredicate {
     SlotCount(Ordering, usize),
 }
 
+/// A service-level agreement: a temporal formula over state predicates.
 pub type SLA = TemporalFormula<StatePredicate>;
 
 fn eval_predicate(system: &VCASystem, predicate: &StatePredicate) -> bool {
@@ -42,6 +44,7 @@ fn eval_predicate(system: &VCASystem, predicate: &StatePredicate) -> bool {
     }
 }
 
+/// Checks an SLA against a tower's levels up to the given depth (Theorem 15).
 pub fn check_sla(sla: &SLA, tower: &Tower, up_to: usize) -> bool {
     if tower.height() == 0 {
         return false;

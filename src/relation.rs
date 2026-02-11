@@ -1,7 +1,9 @@
 use crate::slot::SlotId;
 
+/// Position index for relations: `A ⊆ V × V × I`.
 pub type PosIndex = u32;
 
+/// A directed relation `(source, target, position)` in the relation set A.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Relation {
     pub source: SlotId,

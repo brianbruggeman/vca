@@ -7,6 +7,7 @@ use crate::types::{
 };
 use thiserror::Error;
 
+/// Errors from L0 λ-calculus operations.
 #[derive(Error, Debug, PartialEq, Eq)]
 pub enum LambdaError {
     #[error("slot {slot_id:?} not found in system")]
@@ -27,6 +28,7 @@ pub enum LambdaError {
     MissingBodyRelation { abs_id: SlotId, pos: PosIndex },
 }
 
+/// Encodes a λ-variable as a slot with `Family::Lambda(Var)`.
 pub fn encode_var(name: &str) -> (SlotId, SlotType) {
     let slot_id = SlotId(
         name.as_bytes()

@@ -1,3 +1,4 @@
+/// Unique identifier for a slot in the system.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct SlotId(pub u64);
 

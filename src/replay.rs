@@ -6,11 +6,14 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use thiserror::Error;
 
+/// Identifies a replica in the distributed system.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct ReplicaId(pub u64);
 
+/// Lamport-style vector clock for causal ordering.
 pub type VectorClock = HashMap<ReplicaId, u64>;
 
+/// A transaction: a sequence of transitions with causal metadata.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Transaction {
     pub ops: Vec<Transition>,
@@ -25,6 +28,7 @@ pub enum ReplayError {
     TransitionError(#[from] TransitionError),
 }
 
+/// Lexicographic comparison of vector clocks for deterministic ordering.
 pub fn vc_cmp(vc1: &VectorClock, vc2: &VectorClock) -> Ordering {
     let all_replicas: Vec<ReplicaId> = {
         let mut replicas: Vec<ReplicaId> = vc1.keys().chain(vc2.keys()).copied().collect();
@@ -45,6 +49,7 @@ pub fn vc_cmp(vc1: &VectorClock, vc2: &VectorClock) -> Ordering {
     Ordering::Equal
 }
 
+/// Total order on transactions: vector clock, then origin, then sequence number.
 pub fn tx_cmp(t1: &Transaction, t2: &Transaction) -> Ordering {
     match vc_cmp(&t1.vc, &t2.vc) {
         Ordering::Equal => match t1.origin.0.cmp(&t2.origin.0) {
@@ -55,10 +60,12 @@ pub fn tx_cmp(t1: &Transaction, t2: &Transaction) -> Ordering {
     }
 }
 
+/// Sorts transactions into deterministic replay order.
 pub fn sort_transactions(txs: &mut [Transaction]) {
     txs.sort_by(tx_cmp);
 }
 
+/// Evaluates a single transaction against a system, applying core_star after each op.
 pub fn eval(
     tx: &Transaction,
     system: &VCASystem,
@@ -80,6 +87,7 @@ pub fn eval(
     Ok(current)
 }
 
+/// Replays a history of transactions in deterministic order (Theorem 12).
 pub fn replay(
     history: &[Transaction],
     initial: &VCASystem,

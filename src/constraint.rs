@@ -1,3 +1,4 @@
+/// Upper bound on source count: finite or infinite.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum UpperBound {
     Finite(u32),
@@ -7,6 +8,7 @@ pub enum UpperBound {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct ConstraintId(pub u64);
 
+/// Lower/upper bound constraint on relation counts.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Constraint {
     pub lower: u32,
