@@ -13,12 +13,6 @@ Require Import Coq.Arith.Arith.
 Require Import Lia.
 Import ListNotations.
 
-Definition valid_rule_slot (F : SlotSystem) (r : Slot) : bool :=
-  match ty_family (type_of F r) with
-  | FamRule => kind_in_registry (ty_kind (type_of F r))
-  | _ => true
-  end.
-
 Definition filter_valid_rules (F : SlotSystem) : list Slot :=
   filter (valid_rule_slot F) (slots F).
 
@@ -59,14 +53,12 @@ Fixpoint core_star_iter (F : SlotSystem) (fuel : nat) : SlotSystem :=
 Definition core_star (F : SlotSystem) : SlotSystem :=
   core_star_iter F (length (slots F) + length (relations F)).
 
-(* Core removes only relations, preserving slots *)
 Lemma core_preserves_slots : forall F,
   slots (core F) = slots F.
 Proof.
   intro F. unfold core. reflexivity.
 Qed.
 
-(* Core only keeps admissible relations *)
 Lemma core_relations_admissible : forall F r,
   In r (relations (core F)) ->
   relation_admissible F r = true.
@@ -76,7 +68,6 @@ Proof.
   destruct H as [_ H]. exact H.
 Qed.
 
-(* Core produces a subset of relations *)
 Lemma core_relations_subset : forall F r,
   In r (relations (core F)) ->
   In r (relations F).
@@ -129,7 +120,6 @@ Proof.
   - reflexivity.
 Qed.
 
-(* Core preserves structural validity *)
 Lemma core_preserves_struct : forall F,
   FS_struct F ->
   FS_struct (core F).
@@ -145,7 +135,6 @@ Proof.
     + apply filter_preserves_upper_bounds. exact Hupper.
 Qed.
 
-(* Core makes all relations admissible *)
 Lemma core_all_admissible : forall F,
   all_admissible (core F) = true.
 Proof.
@@ -156,8 +145,6 @@ Proof.
   exact Hadm.
 Qed.
 
-(* Theorem 9: Core* Produces Coherent (for self-referential systems)
-   Note: We prove a simplified version - core on an already-struct system produces coherent. *)
 Theorem core_produces_coherent : forall F,
   FS_struct F ->
   rule_ref F = RuleSelfRef ->
@@ -192,7 +179,6 @@ Proof.
   rewrite forallb_forall in Hadm. exact (Hadm r Hr).
 Qed.
 
-(* Alternative statement: Core F = F when F is coherent *)
 Theorem core_fixpoint_on_coherent : forall F,
   FS_coh F ->
   slots (core F) = slots F /\ relations (core F) = relations F.
@@ -202,7 +188,6 @@ Proof.
   - apply core_idempotent_on_coherent. exact H.
 Qed.
 
-(* core_R preserves or reduces slots/relations count *)
 Lemma core_R_slots_le : forall F,
   length (slots (core_R F)) <= length (slots F).
 Proof.
@@ -240,29 +225,36 @@ Proof.
   lia.
 Qed.
 
-(* The theorems below require a property not in FS_struct: that relation
-   endpoints are in the slots list. We add this as an additional constraint
-   called "well-formed". *)
-
 Definition endpoints_in_slots (F : SlotSystem) : bool :=
   forallb (fun r =>
     andb (existsb (Slot_eqb (rel_source r)) (slots F))
          (existsb (Slot_eqb (rel_target r)) (slots F))) (relations F).
 
-Lemma valid_rule_slot_true : forall F r, valid_rule_slot F r = true.
+Definition no_invalid_rules (F : SlotSystem) : Prop :=
+  forall v, In v (slots F) -> ty_family (type_of F v) = FamRule ->
+    ty_kind (type_of F v) <> KindInvalid.
+
+Lemma valid_rule_slot_of_non_invalid : forall F r,
+  (ty_family (type_of F r) = FamRule -> ty_kind (type_of F r) <> KindInvalid) ->
+  valid_rule_slot F r = true.
 Proof.
-  intros F r. unfold valid_rule_slot.
-  destruct (ty_family (type_of F r)); reflexivity.
+  intros F r H. unfold valid_rule_slot.
+  destruct (ty_family (type_of F r)) eqn:Ef; try reflexivity.
+  apply kind_in_registry_valid. apply H. reflexivity.
 Qed.
 
-Lemma filter_valid_rules_id : forall F, filter_valid_rules F = slots F.
+Lemma filter_valid_rules_id : forall F,
+  no_invalid_rules F ->
+  filter_valid_rules F = slots F.
 Proof.
-  intro F. unfold filter_valid_rules.
-  apply filter_all_true. intros x _. apply valid_rule_slot_true.
+  intros F Hnir. unfold filter_valid_rules.
+  apply filter_all_true. intros x Hx.
+  apply valid_rule_slot_of_non_invalid.
+  intro Hfam. exact (Hnir x Hx Hfam).
 Qed.
 
 Definition well_formed (F : SlotSystem) : Prop :=
-  FS_struct F /\ endpoints_in_slots F = true.
+  FS_struct F /\ endpoints_in_slots F = true /\ no_invalid_rules F.
 
 Lemma filter_length_eq_all_true : forall {A : Type} (f : A -> bool) (l : list A),
   length (filter f l) = length l ->
@@ -386,7 +378,7 @@ Lemma fixpoint_implies_coherent : forall F,
   length (relations (core (core_R F))) = length (relations F) ->
   FS_coh F.
 Proof.
-  intros F [Hstruct Hwf] Hself Hslots Hrels.
+  intros F [Hstruct [Hwf _]] Hself Hslots Hrels.
   unfold FS_coh, FS_coh_b.
   apply andb_true_intro. split.
   - unfold FS_struct, FS_struct_b in *. exact Hstruct.
@@ -405,9 +397,28 @@ Proof.
   rewrite Hcontra in Hx. inversion Hx.
 Qed.
 
-Lemma core_R_slots_eq : forall F, slots (core_R F) = slots F.
+Lemma no_invalid_rules_core_R : forall F,
+  no_invalid_rules (core_R F).
 Proof.
-  intro F. unfold core_R. simpl. apply filter_valid_rules_id.
+  intro F. unfold no_invalid_rules, core_R. simpl.
+  intros v Hv Hfam Hinv.
+  unfold filter_valid_rules in Hv. apply filter_In in Hv. destruct Hv as [_ Hvr].
+  unfold valid_rule_slot in Hvr. rewrite Hfam in Hvr.
+  rewrite Hinv in Hvr. simpl in Hvr. discriminate.
+Qed.
+
+Lemma no_invalid_rules_core : forall F,
+  no_invalid_rules F -> no_invalid_rules (core F).
+Proof.
+  intros F Hnir v Hv Hfam.
+  unfold core in Hv. simpl in Hv. exact (Hnir v Hv Hfam).
+Qed.
+
+Lemma core_R_slots_eq : forall F,
+  no_invalid_rules F ->
+  slots (core_R F) = slots F.
+Proof.
+  intros F Hnir. unfold core_R. simpl. apply filter_valid_rules_id. exact Hnir.
 Qed.
 
 Lemma relations_in_slots_id : forall F,
@@ -419,30 +430,32 @@ Proof.
 Qed.
 
 Lemma core_R_relations_eq : forall F,
+  no_invalid_rules F ->
   endpoints_in_slots F = true ->
   relations (core_R F) = relations F.
 Proof.
-  intros F Hwf. unfold core_R. simpl. rewrite filter_valid_rules_id.
+  intros F Hnir Hwf. unfold core_R. simpl. rewrite (filter_valid_rules_id F Hnir).
   apply relations_in_slots_id. exact Hwf.
 Qed.
 
 Lemma core_R_eq : forall F,
+  no_invalid_rules F ->
   endpoints_in_slots F = true ->
   slots (core_R F) = slots F /\ relations (core_R F) = relations F.
 Proof.
-  intros F Hwf. split.
-  - apply core_R_slots_eq.
-  - apply core_R_relations_eq. exact Hwf.
+  intros F Hnir Hwf. split.
+  - apply core_R_slots_eq. exact Hnir.
+  - apply core_R_relations_eq; assumption.
 Qed.
 
 Lemma core_R_preserves_well_formed : forall F,
   well_formed F ->
   well_formed (core_R F).
 Proof.
-  intros F [Hstruct Hwf].
-  split.
+  intros F [Hstruct [Hwf Hnir]].
+  split; [|split].
   - unfold core_R, FS_struct, FS_struct_b in *. simpl.
-    rewrite filter_valid_rules_id.
+    rewrite (filter_valid_rules_id F Hnir).
     apply andb_prop in Hstruct. destruct Hstruct as [Hne Hrest].
     apply andb_prop in Hrest. destruct Hrest as [Hpos Hupper].
     apply andb_true_intro. split.
@@ -474,23 +487,25 @@ Proof.
            lia.
         -- reflexivity.
   - unfold endpoints_in_slots, core_R, relations_in_slots in *. simpl.
-    rewrite filter_valid_rules_id.
+    rewrite (filter_valid_rules_id F Hnir).
     rewrite forallb_forall in *. intros r Hr.
     apply filter_In in Hr. destruct Hr as [_ Hr].
     exact Hr.
+  - apply no_invalid_rules_core_R.
 Qed.
 
 Lemma core_preserves_well_formed : forall F,
   well_formed F ->
   well_formed (core F).
 Proof.
-  intros F [Hstruct Hwf].
-  split.
+  intros F [Hstruct [Hwf Hnir]].
+  split; [|split].
   - apply core_preserves_struct. exact Hstruct.
   - unfold endpoints_in_slots, core, admissible_relations in *. simpl.
     rewrite forallb_forall in *. intros r Hr.
     apply filter_In in Hr. destruct Hr as [Hr _].
     exact (Hwf r Hr).
+  - apply no_invalid_rules_core. exact Hnir.
 Qed.
 
 Lemma relation_admissible_ext : forall F r,
@@ -501,23 +516,25 @@ Proof.
   destruct F. reflexivity.
 Qed.
 
-Lemma relation_admissible_core_R : forall F r,
-  relation_admissible (core_R F) r = relation_admissible F r.
+Lemma relation_admissible_core_R : forall F,
+  no_invalid_rules F ->
+  forall r, relation_admissible (core_R F) r = relation_admissible F r.
 Proof.
-  intros F r. unfold core_R. simpl.
-  rewrite filter_valid_rules_id.
+  intros F Hnir r. unfold core_R. simpl.
+  rewrite (filter_valid_rules_id F Hnir).
   apply relation_admissible_ext.
 Qed.
 
 Lemma core_core_R_simplified : forall F,
+  no_invalid_rules F ->
   endpoints_in_slots F = true ->
   slots (core (core_R F)) = slots F /\
   relations (core (core_R F)) = admissible_relations F.
 Proof.
-  intros F Hwf. split.
-  - rewrite core_preserves_slots. apply core_R_slots_eq.
+  intros F Hnir Hwf. split.
+  - rewrite core_preserves_slots. apply core_R_slots_eq. exact Hnir.
   - unfold core, admissible_relations. simpl.
-    unfold core_R. simpl. rewrite filter_valid_rules_id.
+    unfold core_R. simpl. rewrite (filter_valid_rules_id F Hnir).
     rewrite relations_in_slots_id by exact Hwf.
     apply filter_ext_in. intros r Hr. apply relation_admissible_ext.
 Qed.
@@ -535,47 +552,48 @@ Proof.
     apply negb_true_iff in Hne. apply Nat.eqb_neq in Hne.
     simpl in Hbound. lia.
   - simpl.
-    destruct Hwf as [Hstruct Hendpoints].
+    destruct Hwf as [Hstruct [Hendpoints Hnir]].
     destruct (andb (Nat.eqb (length (filter_valid_rules F)) (length (slots F)))
                    (Nat.eqb (length (admissible_relations (core_R F))) (length (relations F)))) eqn:Hfix.
     + apply andb_prop in Hfix. destruct Hfix as [Hslots Hrels].
       apply Nat.eqb_eq in Hslots. apply Nat.eqb_eq in Hrels.
-      rewrite filter_valid_rules_id in Hslots.
+      rewrite (filter_valid_rules_id F Hnir) in Hslots.
       unfold admissible_relations in Hrels.
-      pose proof (core_R_relations_eq F Hendpoints) as Hr_eq.
+      pose proof (core_R_relations_eq F Hnir Hendpoints) as Hr_eq.
       rewrite Hr_eq in Hrels.
       assert (forall r, relation_admissible (core_R F) r = relation_admissible F r) as Hadm_eq.
-      { intro r. apply relation_admissible_core_R. }
+      { intro r. apply (relation_admissible_core_R F Hnir). }
       rewrite (filter_ext _ _ Hadm_eq) in Hrels.
       apply (fixpoint_implies_coherent F).
-      * split; assumption.
+      * split; [exact Hstruct | split; [exact Hendpoints | exact Hnir]].
       * exact Hself.
-      * pose proof (core_core_R_simplified F Hendpoints) as [Hs _]. rewrite Hs. reflexivity.
-      * pose proof (core_core_R_simplified F Hendpoints) as [_ Hr].
+      * pose proof (core_core_R_simplified F Hnir Hendpoints) as [Hs _]. rewrite Hs. reflexivity.
+      * pose proof (core_core_R_simplified F Hnir Hendpoints) as [_ Hr].
         rewrite Hr. unfold admissible_relations. exact Hrels.
     + apply IH.
-      * apply core_preserves_well_formed. apply core_R_preserves_well_formed. split; assumption.
+      * apply core_preserves_well_formed. apply core_R_preserves_well_formed.
+        split; [exact Hstruct | split; [exact Hendpoints | exact Hnir]].
       * unfold core, core_R. simpl. exact Hself.
       * pose proof (core_core_R_decreasing F) as Hdec.
         apply Bool.andb_false_iff in Hfix.
         destruct Hfix as [Hslots | Hrels].
-        -- rewrite filter_valid_rules_id in Hslots. apply Nat.eqb_neq in Hslots. lia.
+        -- rewrite (filter_valid_rules_id F Hnir) in Hslots. apply Nat.eqb_neq in Hslots. lia.
         -- apply Nat.eqb_neq in Hrels.
            unfold admissible_relations in Hrels.
-           pose proof (core_R_relations_eq F Hendpoints) as Hr_eq.
+           pose proof (core_R_relations_eq F Hnir Hendpoints) as Hr_eq.
            rewrite Hr_eq in Hrels.
            assert (filter (relation_admissible (core_R F)) (relations F) =
                    filter (relation_admissible F) (relations F)) as Hfilter_eq.
-           { apply filter_ext_in. intros r _. apply relation_admissible_core_R. }
+           { apply filter_ext_in. intros r _. apply (relation_admissible_core_R F Hnir). }
            rewrite Hfilter_eq in Hrels.
            pose proof (filter_length_le (relation_admissible F) (relations F)) as Hle.
            assert (length (relations (core (core_R F))) <= length (relations F)) as Hle2.
            { pose proof (core_relations_le (core_R F)) as Hle1.
              pose proof (core_R_relations_le F) as Hle3. lia. }
            assert (length (relations (core (core_R F))) < length (relations F)) as Hlt.
-           { pose proof (core_core_R_simplified F Hendpoints) as [_ Hr].
+           { pose proof (core_core_R_simplified F Hnir Hendpoints) as [_ Hr].
              rewrite Hr. unfold admissible_relations. lia. }
-           pose proof (core_core_R_simplified F Hendpoints) as [Hs _].
+           pose proof (core_core_R_simplified F Hnir Hendpoints) as [Hs _].
            rewrite Hs. lia.
 Qed.
 
@@ -588,7 +606,6 @@ Proof.
   exact core_star_iter_coherent_aux.
 Qed.
 
-(* Theorem 9 extended: Core* produces coherent system *)
 Theorem core_star_produces_coherent : forall F,
   well_formed F ->
   rule_ref F = RuleSelfRef ->
@@ -602,22 +619,24 @@ Qed.
 
 Lemma core_R_on_coherent : forall F,
   FS_coh F ->
+  no_invalid_rules F ->
   endpoints_in_slots F = true ->
   slots (core_R F) = slots F.
 Proof.
-  intros F _ _. apply core_R_slots_eq.
+  intros F _ Hnir _. apply core_R_slots_eq. exact Hnir.
 Qed.
 
 Lemma core_core_R_on_coherent : forall F,
   FS_coh F ->
   endpoints_in_slots F = true ->
+  no_invalid_rules F ->
   core (core_R F) = F.
 Proof.
-  intros F Hcoh Hwf.
+  intros F Hcoh Hwf Hnir.
   pose proof (core_idempotent_on_coherent F Hcoh) as Hrels.
   unfold core, admissible_relations in Hrels. simpl in Hrels.
   unfold core, core_R, admissible_relations. simpl.
-  rewrite filter_valid_rules_id.
+  rewrite (filter_valid_rules_id F Hnir).
   rewrite relations_in_slots_id by exact Hwf.
   assert (filter (relation_admissible
             (mkSlotSystem (slots F) (relations F) (type_of F) (rule_ref F)))
@@ -631,13 +650,15 @@ Qed.
 Lemma coherent_implies_well_formed : forall F,
   FS_coh F ->
   endpoints_in_slots F = true ->
+  no_invalid_rules F ->
   well_formed F.
 Proof.
-  intros F Hcoh Hwf.
-  split.
+  intros F Hcoh Hwf Hnir.
+  split; [|split].
   - unfold FS_coh, FS_coh_b in Hcoh.
     apply andb_prop in Hcoh. destruct Hcoh as [Hstruct _]. exact Hstruct.
   - exact Hwf.
+  - exact Hnir.
 Qed.
 
 Lemma core_star_preserves_endpoints : forall F,
@@ -648,40 +669,60 @@ Proof.
   unfold core_star.
   generalize (length (slots F) + length (relations F)) as fuel.
   intro fuel. generalize dependent F.
-  induction fuel as [|n IH]; intros F [Hstruct Hendpoints].
+  induction fuel as [|n IH]; intros F [Hstruct [Hendpoints Hnir]].
   - simpl. exact Hendpoints.
   - simpl.
     destruct (andb (Nat.eqb (length (filter_valid_rules F)) (length (slots F)))
                    (Nat.eqb (length (admissible_relations (core_R F))) (length (relations F)))) eqn:Hfix.
     + exact Hendpoints.
-    + apply IH. apply core_preserves_well_formed. apply core_R_preserves_well_formed. split; assumption.
+    + apply IH. apply core_preserves_well_formed. apply core_R_preserves_well_formed.
+      split; [exact Hstruct | split; [exact Hendpoints | exact Hnir]].
+Qed.
+
+Lemma core_star_preserves_no_invalid_rules : forall F,
+  well_formed F ->
+  no_invalid_rules (core_star F).
+Proof.
+  intros F Hwf.
+  unfold core_star.
+  generalize (length (slots F) + length (relations F)) as fuel.
+  intro fuel. generalize dependent F.
+  induction fuel as [|n IH]; intros F [Hstruct [Hendpoints Hnir]].
+  - simpl. exact Hnir.
+  - simpl.
+    destruct (andb (Nat.eqb (length (filter_valid_rules F)) (length (slots F)))
+                   (Nat.eqb (length (admissible_relations (core_R F))) (length (relations F)))) eqn:Hfix.
+    + exact Hnir.
+    + apply IH. apply core_preserves_well_formed. apply core_R_preserves_well_formed.
+      split; [exact Hstruct | split; [exact Hendpoints | exact Hnir]].
 Qed.
 
 Lemma core_star_fixpoint : forall F,
   FS_coh F ->
   endpoints_in_slots F = true ->
+  no_invalid_rules F ->
   core_star F = F.
 Proof.
-  intros F Hcoh Hwf.
+  intros F Hcoh Hwf Hnir.
   unfold core_star, core_star_iter.
-  pose proof (core_core_R_on_coherent F Hcoh Hwf) as Heq.
+  pose proof (core_core_R_on_coherent F Hcoh Hwf Hnir) as Heq.
   assert (length (slots F) + length (relations F) > 0 \/ length (slots F) + length (relations F) = 0) as [Hgt|H0].
   { destruct (length (slots F) + length (relations F)); [right | left]; lia. }
   - destruct (length (slots F) + length (relations F)) eqn:Efuel.
     + lia.
     + simpl.
       assert (slots (core (core_R F)) = slots F) as Hs.
-      { rewrite core_preserves_slots. apply core_R_slots_eq. }
+      { rewrite core_preserves_slots. apply core_R_slots_eq. exact Hnir. }
       assert (relations (core (core_R F)) = relations F) as Hr.
-      { pose proof (core_core_R_simplified F Hwf) as [_ Hr].
+      { pose proof (core_core_R_simplified F Hnir Hwf) as [_ Hr].
         rewrite Hr. unfold admissible_relations.
         pose proof (core_idempotent_on_coherent F Hcoh) as Hrels.
         unfold core, admissible_relations in Hrels. simpl in Hrels.
         transitivity (filter (relation_admissible F) (relations F)).
         - apply filter_ext_in. intros r _. apply relation_admissible_ext.
         - exact Hrels. }
-      rewrite filter_valid_rules_id.
-      unfold admissible_relations, core_R. simpl. rewrite filter_valid_rules_id.
+      rewrite (filter_valid_rules_id F Hnir).
+      unfold admissible_relations, core_R. simpl. rewrite (filter_valid_rules_id F Hnir).
       rewrite relations_in_slots_id by exact Hwf.
       assert (forall r, relation_admissible (mkSlotSystem (slots F) (relations F) (type_of F) (rule_ref F)) r =
                         relation_admissible F r) as Hadm by (intro; apply relation_admissible_ext).
@@ -700,7 +741,6 @@ Proof.
     lia.
 Qed.
 
-(* Theorem 10 extended: Core* is idempotent *)
 Theorem core_star_idempotent : forall F,
   well_formed F ->
   rule_ref F = RuleSelfRef ->
@@ -709,5 +749,6 @@ Proof.
   intros F Hwf Hself.
   pose proof (core_star_produces_coherent F Hwf Hself) as Hcoh.
   pose proof (core_star_preserves_endpoints F Hwf) as Hendpoints.
+  pose proof (core_star_preserves_no_invalid_rules F Hwf) as Hnir.
   apply core_star_fixpoint; assumption.
 Qed.
