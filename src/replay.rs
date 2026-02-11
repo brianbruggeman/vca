@@ -10,7 +10,38 @@ use std::collections::HashMap;
 pub struct ReplicaId(pub u64);
 
 /// Lamport-style vector clock for causal ordering.
-pub type VectorClock = HashMap<ReplicaId, u64>;
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct VectorClock(HashMap<ReplicaId, u64>);
+
+impl VectorClock {
+    pub fn new() -> Self {
+        Self(HashMap::new())
+    }
+
+    pub fn insert(&mut self, r: ReplicaId, v: u64) {
+        self.0.insert(r, v);
+    }
+
+    pub fn get(&self, r: &ReplicaId) -> Option<&u64> {
+        self.0.get(r)
+    }
+
+    pub fn keys(&self) -> impl Iterator<Item = &ReplicaId> {
+        self.0.keys()
+    }
+}
+
+impl Default for VectorClock {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl From<HashMap<ReplicaId, u64>> for VectorClock {
+    fn from(m: HashMap<ReplicaId, u64>) -> Self {
+        Self(m)
+    }
+}
 
 /// A transaction: a sequence of transitions with causal metadata.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -169,7 +200,7 @@ mod tests {
 
     #[test]
     fn vector_clock_is_hashmap() {
-        let mut vc: VectorClock = HashMap::new();
+        let mut vc = VectorClock::new();
         let r1 = ReplicaId(1);
         let r2 = ReplicaId(2);
         vc.insert(r1, 5);
