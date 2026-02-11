@@ -45,13 +45,6 @@ impl Interpretation for InterpretNone {
     }
 }
 
-/// Metadata extracted from a rule slot for interpretation.
-pub struct RuleMetadata {
-    pub pattern_source: SlotType,
-    pub pattern_target: SlotType,
-    pub pos_predicate: Box<dyn Fn(PosIndex) -> bool>,
-}
-
 /// Admits relations where source and target types match given patterns.
 pub struct InterpretPatternMatch {
     pub pattern_source: Box<SlotType>,
@@ -97,6 +90,33 @@ impl Interpretation for InterpretEq {
     }
 }
 
+/// Constructs the interpretation function for a rule slot's kind.
+pub fn interpretation_for(rule_type: &SlotType) -> Option<Box<dyn Interpretation>> {
+    match rule_type.kind {
+        crate::types::Kind::Any => Some(Box::new(InterpretAny)),
+        crate::types::Kind::None => Some(Box::new(InterpretNone)),
+        crate::types::Kind::PatternMatch => match &rule_type.meta {
+            TypeMeta::PatternMatch {
+                pattern_source,
+                pattern_target,
+            } => Some(Box::new(InterpretPatternMatch {
+                pattern_source: pattern_source.clone(),
+                pattern_target: pattern_target.clone(),
+                pos_predicate: Box::new(|_| true),
+            })),
+            _ => None,
+        },
+        crate::types::Kind::Eq => match &rule_type.meta {
+            TypeMeta::Eq { i_eq, id_pairs } => Some(Box::new(InterpretEq {
+                i_eq: *i_eq,
+                id_pairs: id_pairs.clone(),
+            })),
+            _ => None,
+        },
+        _ => Some(Box::new(InterpretNone)),
+    }
+}
+
 /// Returns true if the given rule slot admits the relation.
 pub fn admits(system: &VCASystem, rule: SlotId, relation: &Relation) -> bool {
     let Some(rule_type) = system.type_of(rule) else {
@@ -113,28 +133,8 @@ pub fn admits(system: &VCASystem, rule: SlotId, relation: &Relation) -> bool {
         return false;
     };
 
-    let interpretation: Box<dyn Interpretation> = match rule_type.kind {
-        crate::types::Kind::Any => Box::new(InterpretAny),
-        crate::types::Kind::None => Box::new(InterpretNone),
-        crate::types::Kind::PatternMatch => match &rule_type.meta {
-            TypeMeta::PatternMatch {
-                pattern_source,
-                pattern_target,
-            } => Box::new(InterpretPatternMatch {
-                pattern_source: pattern_source.clone(),
-                pattern_target: pattern_target.clone(),
-                pos_predicate: Box::new(|_| true),
-            }),
-            _ => return false,
-        },
-        crate::types::Kind::Eq => match &rule_type.meta {
-            TypeMeta::Eq { i_eq, id_pairs } => Box::new(InterpretEq {
-                i_eq: *i_eq,
-                id_pairs: id_pairs.clone(),
-            }),
-            _ => return false,
-        },
-        _ => Box::new(InterpretNone),
+    let Some(interpretation) = interpretation_for(rule_type) else {
+        return false;
     };
 
     interpretation.interpret(rule_type, t_src, t_tgt, relation.position)

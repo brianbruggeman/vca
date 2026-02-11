@@ -28,8 +28,8 @@ pub mod transitions;
 pub mod types;
 
 pub use admissibility::{
-    InterpretAny, InterpretEq, InterpretNone, InterpretPatternMatch, Interpretation, RuleMetadata,
-    admits, is_admissible,
+    InterpretAny, InterpretEq, InterpretNone, InterpretPatternMatch, Interpretation, admits,
+    interpretation_for, is_admissible,
 };
 pub use coherence::{all_admissible, is_coherent};
 pub use constraint::{Constraint, ConstraintId, UpperBound};
@@ -51,9 +51,7 @@ pub use system::{RuleRef, SystemError, VCASystem};
 pub use temporal::TemporalFormula;
 pub use tower::{Tower, TowerError};
 pub use transitions::{Transition, TransitionError, apply_transition};
-#[allow(deprecated)]
 pub use types::{
-    Affinity, Family, Kind, LType, LambdaKind, Layer, TypeMeta, affinity_matches, family_matches,
-    kind_matches, layer_matches, type_matches,
+    Affinity, Family, Kind, LambdaKind, Layer, SlotType, TypeId, TypeMeta, affinity_matches,
+    family_matches, kind_matches, layer_matches, type_matches,
 };
-pub use types::{SlotType, TypeId};

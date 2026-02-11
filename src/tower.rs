@@ -135,22 +135,13 @@ impl Tower {
     }
 }
 
-/// checks if a relation is admissible under a specific rule system
-///
-/// the relation exists in `system` (level n), and we check if it's admissible
-/// under rules in `rule_system` (level n-1). the relation's source/target types
-/// come from `system`, but the rules come from `rule_system`.
 fn is_admissible_under(
     system: &VCASystem,
     relation: &crate::relation::Relation,
     rule_system: &VCASystem,
 ) -> bool {
-    use crate::admissibility::{
-        InterpretAny, InterpretEq, InterpretNone, InterpretPatternMatch, Interpretation,
-    };
-    use crate::types::TypeMeta;
+    use crate::admissibility::interpretation_for;
 
-    // get source and target types from the system where the relation exists
     let Some(t_src) = system.type_of(relation.source) else {
         return false;
     };
@@ -158,11 +149,7 @@ fn is_admissible_under(
         return false;
     };
 
-    // get rule slots from the rule system
-    let rule_slots = rule_system.rule_slots();
-
-    // check if any rule in the rule system admits this relation
-    for rule in rule_slots {
+    for rule in rule_system.rule_slots() {
         let Some(rule_type) = rule_system.type_of(rule) else {
             continue;
         };
@@ -170,31 +157,11 @@ fn is_admissible_under(
             continue;
         }
 
-        let interpretation: Box<dyn Interpretation> = match rule_type.kind {
-            crate::types::Kind::Any => Box::new(InterpretAny),
-            crate::types::Kind::None => Box::new(InterpretNone),
-            crate::types::Kind::PatternMatch => match &rule_type.meta {
-                TypeMeta::PatternMatch {
-                    pattern_source,
-                    pattern_target,
-                } => Box::new(InterpretPatternMatch {
-                    pattern_source: pattern_source.clone(),
-                    pattern_target: pattern_target.clone(),
-                    pos_predicate: Box::new(|_| true),
-                }),
-                _ => continue,
-            },
-            crate::types::Kind::Eq => match &rule_type.meta {
-                TypeMeta::Eq { i_eq, id_pairs } => Box::new(InterpretEq {
-                    i_eq: *i_eq,
-                    id_pairs: id_pairs.clone(),
-                }),
-                _ => continue,
-            },
-            _ => Box::new(InterpretNone),
+        let Some(interp) = interpretation_for(rule_type) else {
+            continue;
         };
 
-        if interpretation.interpret(rule_type, t_src, t_tgt, relation.position) {
+        if interp.interpret(rule_type, t_src, t_tgt, relation.position) {
             return true;
         }
     }
