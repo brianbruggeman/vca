@@ -629,11 +629,18 @@ Transitions preserve shape. Coherence may change, but structure is maintained.
 
 ---
 
+### Definition 11.1 (Well-Formed)
+
+ℱ is **well-formed** iff:
+1. ℱ ∈ FS_struct
+2. All relation endpoints exist: ∀(u,v,i) ∈ A : u ∈ V ∧ v ∈ V
+3. All rule slots valid: ∀r ∈ V with τ(r).family = Rule : τ(r).kind ∈ K
+
 ### Theorem 9: Core* Produces Coherent
 
 #### Statement
 
-For ℱ ∈ FS_struct: Core*(ℱ) ∈ FS_coh.
+For well-formed ℱ: Core*(ℱ) ∈ FS_coh.
 
 #### Definitions
 
@@ -681,11 +688,11 @@ Define iteration: S₀ = (V, A), S_{n+1} = Φ(S_n) where Φ applies Core_R then 
 
 #### Statement
 
-Core*(Core*(ℱ)) = Core*(ℱ)
+For well-formed ℱ: Core*(Core*(ℱ)) = Core*(ℱ)
 
 #### Proof
 
-Let ℱ* = Core*(ℱ). By Theorem 9, ℱ* ∈ FS_coh.
+Let ℱ* = Core*(ℱ). By Theorem 9 (well-formed ℱ), ℱ* ∈ FS_coh.
 
 Apply Core* to ℱ*:
 - Core_R finds no invalid rule slots (already removed)
@@ -1000,8 +1007,8 @@ Tower coherence *is* the SLA □(coherent). Structural and temporal views unifie
 | # | Theorem | Statement | Key Insight |
 |---|---------|-----------|-------------|
 | 8 | Δ Preserves Structure | Valid δ: FS_struct → FS_struct | Shape preserved |
-| 9 | Core* Produces Coherent | Core*(ℱ) ∈ FS_coh | Repair always works |
-| 10 | Core* Idempotent | Core*(Core*(ℱ)) = Core*(ℱ) | Projection property |
+| 9 | Core* Produces Coherent | Well-formed ℱ: Core*(ℱ) ∈ FS_coh | Repair always works |
+| 10 | Core* Idempotent | Well-formed ℱ: Core*(Core*(ℱ)) = Core*(ℱ) | Projection property |
 | 11 | Independent Transitions Commute | δ₁ ⊥ δ₂ ⟹ order irrelevant | Enables parallelism |
 | 12 | Replay Convergence | Same H, same ℱ₀ → same result | CRDT semantics |
 
@@ -1106,9 +1113,15 @@ All 16 theorems verified in Coq 8.18+ with no `Admitted` proofs.
 | Towers.v | 5-7 (Independence, Coinductive, Prefix) |
 | Transitions.v | 8 (Δ Preserves) |
 | CoreStar.v | 9-10 (Core* Coherent, Idempotent) |
-| Commutativity.v | 11-12 (Commute, Replay) |
+| Commutativity.v | 11 (Commute, OT) |
+| Replay.v | 12 (Replay Determinism, Convergence) |
 | Temporal.v | 13-16 (□, ◇, SLA, Tower SLA) |
 | Lambda.v | 6.1-6.2 (λ Sound, Complete) |
+
+**RuleExternal remark:** The tower uses explicit external checking via
+`all_admissible_external`; standalone `relation_admissible` treats
+`RuleExternal` as auto-admit since the external system is consulted
+at the tower level.
 
 
 ---
@@ -1140,6 +1153,6 @@ All 16 theorems verified in Coq 8.18+ with no `Admitted` proofs.
 | Proof assistant | Coq 8.18.0 |
 | Dependencies | None (stdlib only) |
 | Admitted | 0 |
-| LOC | ~3700 |
+| LOC | ~4200 |
 | Build | `make` |
-| Files | Core.v, Admissibility.v, Transitions.v, Towers.v, CoreStar.v, Commutativity.v, Temporal.v, Lambda.v, Model.v |
+| Files | Core.v, Admissibility.v, Transitions.v, Towers.v, CoreStar.v, Commutativity.v, Replay.v, Temporal.v, Lambda.v, Model.v |
