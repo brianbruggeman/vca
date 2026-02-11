@@ -37,7 +37,7 @@ Inductive Family : Type :=
   | FamTop | FamBot | FamRule | FamData | FamLambda | FamTemporal.
 
 Inductive Kind : Type :=
-  | KindTop | KindBot | KindAny | KindNone | KindPatternMatch | KindEq.
+  | KindTop | KindBot | KindAny | KindNone | KindPatternMatch | KindEq | KindInvalid.
 
 Inductive Affinity : Type :=
   | AffTop | AffBot | AffStrict | AffLax.
@@ -66,7 +66,8 @@ Definition Family_eqb (f1 f2 : Family) : bool :=
 Definition Kind_eqb (k1 k2 : Kind) : bool :=
   match k1, k2 with
   | KindTop, KindTop | KindBot, KindBot | KindAny, KindAny
-  | KindNone, KindNone | KindPatternMatch, KindPatternMatch | KindEq, KindEq => true
+  | KindNone, KindNone | KindPatternMatch, KindPatternMatch | KindEq, KindEq
+  | KindInvalid, KindInvalid => true
   | _, _ => false
   end.
 
