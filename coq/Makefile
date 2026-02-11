@@ -1,7 +1,7 @@
 COQC = coqc
 COQDEP = coqdep
 
-SOURCES = Core.v Admissibility.v Transitions.v Towers.v CoreStar.v Commutativity.v Temporal.v Lambda.v Model.v
+SOURCES = Core.v Admissibility.v Transitions.v Towers.v CoreStar.v Commutativity.v Temporal.v Replay.v Lambda.v Model.v
 
 all: $(SOURCES:.v=.vo)
 
