@@ -23,7 +23,7 @@ Definition all_admissible_external (F_n F_prev : SlotSystem) : bool :=
   forallb (fun rel =>
     existsb (fun r =>
       andb (Family_eqb (ty_family (type_of F_prev r)) FamRule)
-           (interpret (ty_kind (type_of F_prev r)) r
+           (interpret (ty_kind (type_of F_prev r)) (type_of F_prev r)
                       (type_of F_n (rel_source rel))
                       (type_of F_n (rel_target rel))
                       (rel_position rel)))
@@ -48,18 +48,23 @@ Definition tower_coh_prefix (T : Tower) (n : nat) : bool :=
 Lemma minus_succ : forall m, S m - 1 = m.
 Proof. intro m. lia. Qed.
 
-Theorem tower_independence : forall T n,
+Theorem tower_independence : forall T n (default : SlotSystem),
   n > 0 ->
-  forall T',
-    T n = T' n ->
-    T (n - 1) = T' (n - 1) ->
-    local_coh T n = local_coh T' n.
+  local_coh T n = local_coh (fun k =>
+    if (Nat.eqb k n || Nat.eqb k (n-1))%bool then T k
+    else default) n.
 Proof.
-  intros T n Hn T' Heq_n Heq_prev.
+  intros T n default Hn.
   destruct n as [|m]; [lia|].
-  unfold local_coh.
-  rewrite minus_succ in Heq_prev.
-  rewrite Heq_n, Heq_prev. reflexivity.
+  replace (S m - 1) with m by lia.
+  assert (forall T', T' (S m) = T (S m) -> T' m = T m ->
+          local_coh T (S m) = local_coh T' (S m)) as Hind.
+  { intros T' Eq1 Eq2. unfold local_coh. rewrite Eq1, Eq2. reflexivity. }
+  apply Hind.
+  - cbv beta. rewrite Nat.eqb_refl. reflexivity.
+  - cbv beta.
+    assert (Nat.eqb m (S m) = false) as H by (apply Nat.eqb_neq; lia).
+    rewrite H, Nat.eqb_refl. reflexivity.
 Qed.
 
 (* Theorem 5 Corollary: Level 0 is self-contained *)
@@ -89,6 +94,38 @@ Proof.
     apply forallb_forall with (x := n) in Hprefix.
     + exact Hprefix.
     + apply in_seq. lia.
+Qed.
+
+CoInductive tower_coherent_co : Tower -> nat -> Prop :=
+  | tc_step : forall T n,
+      local_coh T n = true ->
+      tower_coherent_co T (S n) ->
+      tower_coherent_co T n.
+
+Lemma tower_coherent_co_advance : forall T n k,
+  tower_coherent_co T n -> tower_coherent_co T (n + k).
+Proof.
+  intros T n k. revert n.
+  induction k; intros n H.
+  - replace (n + 0) with n by lia. exact H.
+  - replace (n + S k) with (S n + k) by lia.
+    apply IHk. destruct H. exact H0.
+Qed.
+
+Theorem tower_coherence_co_equiv : forall T,
+  tower_coherent T <-> tower_coherent_co T 0.
+Proof.
+  intro T. split.
+  - intro Hcoh.
+    cofix IH.
+    assert (forall n, tower_coherent_co T n) as Hgen.
+    { cofix IH2. intro n.
+      apply tc_step; [apply Hcoh | apply IH2]. }
+    apply Hgen.
+  - intro Hco. intro n.
+    assert (tower_coherent_co T n) as Hn.
+    { replace n with (0 + n) by lia. apply tower_coherent_co_advance. exact Hco. }
+    destruct Hn. exact H.
 Qed.
 
 (* Theorem 7: Finite Prefix Decidable
