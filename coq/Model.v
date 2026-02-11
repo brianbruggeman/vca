@@ -7,6 +7,8 @@
 Require Import VCA.Core.
 Require Import VCA.Admissibility.
 Require Import VCA.Transitions.
+Require Import VCA.Towers.
+Require Import VCA.Commutativity.
 Require Import Coq.Lists.List.
 Require Import Coq.Bool.Bool.
 Import ListNotations.
@@ -14,7 +16,20 @@ Import ListNotations.
 (* Concrete slot type: natural numbers *)
 Axiom slot_nat : nat -> Slot.
 Axiom slot_nat_injective : forall n m, slot_nat n = slot_nat m -> n = m.
-Axiom slot_nat_dec : forall s, exists n, s = slot_nat n.
+Axiom slot_nat_inv : forall s, {n : nat | s = slot_nat n}.
+
+Definition slot_to_nat (s : Slot) : nat := proj1_sig (slot_nat_inv s).
+
+Lemma slot_to_nat_spec : forall s, s = slot_nat (slot_to_nat s).
+Proof.
+  intro s. unfold slot_to_nat. destruct (slot_nat_inv s) as [n Hn]. exact Hn.
+Qed.
+
+Lemma slot_to_nat_nat : forall n, slot_to_nat (slot_nat n) = n.
+Proof.
+  intro n. unfold slot_to_nat. destruct (slot_nat_inv (slot_nat n)) as [m Hm].
+  simpl. symmetry. apply slot_nat_injective. exact Hm.
+Qed.
 
 (* Default slot type *)
 Definition default_type : SlotType :=
@@ -22,7 +37,7 @@ Definition default_type : SlotType :=
 
 (* Rule slot type with Kind = Any *)
 Definition rule_type_any (id : nat) : SlotType :=
-  mkSlotType FamRule KindAny 0 AffLax 0 Infinite id.
+  mkSlotType FamRule KindAny 1 AffLax 0 Infinite id.
 
 (* Data slot type with upper bound *)
 Definition data_type (upper : nat) (id : nat) : SlotType :=
@@ -110,51 +125,3 @@ Definition build_three_slot (v0 v1 v2 : Slot) : option SlotSystem :=
       end
   end.
 
-(* Tower representation *)
-Definition Tower := nat -> SlotSystem.
-
-Definition tower_level (T : Tower) (n : nat) : SlotSystem := T n.
-
-Definition local_coh_0 (F : SlotSystem) : bool :=
-  andb (FS_struct_b F) (all_admissible F).
-
-Definition local_coh_n (F_n F_prev : SlotSystem) : bool :=
-  FS_struct_b F_n.
-
-(* Constant tower: same system at all levels *)
-Definition constant_tower (F : SlotSystem) : Tower :=
-  fun _ => F.
-
-Lemma constant_tower_local_coh : forall F,
-  FS_coh F ->
-  local_coh_0 (constant_tower F 0) = true.
-Proof.
-  intros F H. unfold constant_tower, local_coh_0.
-  unfold FS_coh, FS_coh_b in H. exact H.
-Qed.
-
-(* Streams of transitions *)
-Definition Stream := list Transition.
-
-Fixpoint apply_stream (s : Stream) (F : SlotSystem) : option SlotSystem :=
-  match s with
-  | [] => Some F
-  | delta :: rest =>
-      match apply_transition delta F with
-      | None => None
-      | Some F' => apply_stream rest F'
-      end
-  end.
-
-Lemma apply_stream_empty : forall F,
-  apply_stream [] F = Some F.
-Proof.
-  intro F. reflexivity.
-Qed.
-
-Lemma apply_stream_single : forall delta F,
-  apply_stream [delta] F = apply_transition delta F.
-Proof.
-  intros delta F. simpl.
-  destruct (apply_transition delta F); reflexivity.
-Qed.
