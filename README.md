@@ -16,7 +16,7 @@ A unified framework that combines structure, computation, and specification in a
 
 ```
 specs/vca.md       Complete formal specification (7 axioms, 16 theorems)
-coq/               Mechanized proofs in Coq 8.18.0 (9 files, ~3,200 lines, 0 Admitted)
+coq/               Mechanized proofs in Coq 8.18.0 (9 files, ~3,700 lines, 0 Admitted)
 src/               Reference implementation in Rust (~8,900 lines)
 tests/             369 tests: unit, integration, property-based (proptest)
 ```
@@ -76,7 +76,7 @@ The Rust implementation mirrors the spec directly:
 
 ## Dependencies
 
-One runtime dependency: `thiserror`. Optional `serde` behind a feature flag.
+Zero runtime dependencies. Optional `serde` behind a feature flag.
 
 ## License
 

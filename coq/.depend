@@ -6,4 +6,4 @@ CoreStar.vo CoreStar.glob CoreStar.v.beautified CoreStar.required_vo: CoreStar.v
 Commutativity.vo Commutativity.glob Commutativity.v.beautified Commutativity.required_vo: Commutativity.v Core.vo Transitions.vo
 Temporal.vo Temporal.glob Temporal.v.beautified Temporal.required_vo: Temporal.v Core.vo Admissibility.vo Towers.vo
 Lambda.vo Lambda.glob Lambda.v.beautified Lambda.required_vo: Lambda.v Core.vo Transitions.vo Commutativity.vo Model.vo
-Model.vo Model.glob Model.v.beautified Model.required_vo: Model.v Core.vo Admissibility.vo Transitions.vo
+Model.vo Model.glob Model.v.beautified Model.required_vo: Model.v Core.vo Admissibility.vo Transitions.vo Towers.vo Commutativity.vo

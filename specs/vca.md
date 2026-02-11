@@ -1140,6 +1140,6 @@ All 16 theorems verified in Coq 8.18+ with no `Admitted` proofs.
 | Proof assistant | Coq 8.18.0 |
 | Dependencies | None (stdlib only) |
 | Admitted | 0 |
-| LOC | ~2500 |
+| LOC | ~3700 |
 | Build | `make` |
 | Files | Core.v, Admissibility.v, Transitions.v, Towers.v, CoreStar.v, Commutativity.v, Temporal.v, Lambda.v, Model.v |
