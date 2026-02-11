@@ -20,14 +20,6 @@ Inductive LambdaTerm : Type :=
   | LAbs : nat -> LambdaTerm -> LambdaTerm
   | LApp : LambdaTerm -> LambdaTerm -> LambdaTerm.
 
-Definition LambdaTerm_eqb (t1 t2 : LambdaTerm) : bool :=
-  match t1, t2 with
-  | LVar n1, LVar n2 => Nat.eqb n1 n2
-  | LAbs x1 m1, LAbs x2 m2 => false
-  | LApp f1 a1, LApp f2 a2 => false
-  | _, _ => false
-  end.
-
 Fixpoint free_vars (t : LambdaTerm) : list nat :=
   match t with
   | LVar x => [x]

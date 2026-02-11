@@ -77,20 +77,6 @@ Proof.
   destruct H as [H _]. exact H.
 Qed.
 
-Lemma filter_filter_length_le : forall {A : Type} (f g : A -> bool) (l : list A),
-  length (filter f (filter g l)) <= length (filter f l).
-Proof.
-  intros A f g l. induction l as [|x xs IH]; simpl.
-  - lia.
-  - destruct (g x) eqn:Eg; simpl.
-    + destruct (f x) eqn:Ef; simpl.
-      * assert (H : length (filter f (filter g xs)) <= length (filter f xs)) by exact IH. lia.
-      * exact IH.
-    + destruct (f x) eqn:Ef; simpl.
-      * assert (H : length (filter f (filter g xs)) <= length (filter f xs)) by exact IH. lia.
-      * exact IH.
-Qed.
-
 Lemma filter_preserves_position_unique : forall f F,
   position_unique F = true ->
   position_unique (mkSlotSystem (slots F) (filter f (relations F)) (type_of F) (rule_ref F)) = true.
@@ -100,7 +86,7 @@ Proof.
   apply filter_In in Hr. destruct Hr as [Hr _].
   specialize (H r Hr). unfold position_unique_at in *. simpl.
   apply Nat.leb_le in H. apply Nat.leb_le.
-  pose proof (filter_filter_length_le
+  pose proof (filter_nested_length_le
     (fun r0 => Slot_eqb (rel_target r0) (rel_target r) && (rel_position r0 =? rel_position r))
     f (relations F)) as Hle.
   lia.
@@ -115,7 +101,7 @@ Proof.
   specialize (H v Hv). unfold upper_satisfied, src_count in *. simpl.
   destruct (ty_upper (type_of F v)) eqn:Eup.
   - apply Nat.leb_le in H. apply Nat.leb_le.
-    pose proof (filter_filter_length_le (fun r => Slot_eqb (rel_target r) v) f (relations F)) as Hle.
+    pose proof (filter_nested_length_le (fun r => Slot_eqb (rel_target r) v) f (relations F)) as Hle.
     lia.
   - reflexivity.
 Qed.
@@ -467,7 +453,7 @@ Proof.
         specialize (Hpos r Hr).
         unfold position_unique_at in *. simpl.
         apply Nat.leb_le in Hpos. apply Nat.leb_le.
-        pose proof (filter_filter_length_le
+        pose proof (filter_nested_length_le
           (fun r0 => Slot_eqb (rel_target r0) (rel_target r) && (rel_position r0 =? rel_position r))
           (fun r0 => existsb (Slot_eqb (rel_source r0)) (slots F) &&
                      existsb (Slot_eqb (rel_target r0)) (slots F))
@@ -479,7 +465,7 @@ Proof.
         unfold upper_satisfied, src_count in *. simpl.
         destruct (ty_upper (type_of F v)) eqn:Eup.
         -- apply Nat.leb_le in Hupper. apply Nat.leb_le.
-           pose proof (filter_filter_length_le
+           pose proof (filter_nested_length_le
              (fun r => Slot_eqb (rel_target r) v)
              (fun r => existsb (Slot_eqb (rel_source r)) (slots F) &&
                        existsb (Slot_eqb (rel_target r)) (slots F))
