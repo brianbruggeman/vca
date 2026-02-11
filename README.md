@@ -16,8 +16,8 @@ A unified framework that combines structure, computation, and specification in a
 
 ```
 specs/vca.md       Complete formal specification (7 axioms, 16 theorems)
-coq/               Mechanized proofs in Coq 8.18.0 (9 files, ~3,700 lines, 0 Admitted)
-src/               Reference implementation in Rust (~8,900 lines)
+coq/               Mechanized proofs in Coq 8.18.0 (10 files, ~4,200 lines, 0 Admitted)
+src/               Reference implementation in Rust (~9,100 lines)
 tests/             369 tests: unit, integration, property-based (proptest)
 ```
 
@@ -53,7 +53,7 @@ Requires Coq 8.18.0.
 make proof
 ```
 
-Compiles all 9 proof files covering all 16 theorems.
+Compiles all 10 proof files covering all 16 theorems.
 
 ## Architecture
 
