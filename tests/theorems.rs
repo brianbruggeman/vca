@@ -3084,15 +3084,18 @@ fn theorem_10_core_star_idempotent() {
         let result2 = core_star(&result1, &registry);
 
         assert_eq!(
-            result1.slots(), result2.slots(),
+            result1.slots(),
+            result2.slots(),
             "core_star should be idempotent for slots (r = ∅ case)"
         );
         assert_eq!(
-            result1.relations(), result2.relations(),
+            result1.relations(),
+            result2.relations(),
             "core_star should be idempotent for relations (r = ∅ case)"
         );
         assert_eq!(
-            result1.types_map(), result2.types_map(),
+            result1.types_map(),
+            result2.types_map(),
             "core_star should be idempotent for types (r = ∅ case)"
         );
     }
@@ -3157,15 +3160,18 @@ fn theorem_10_core_star_idempotent() {
         let result2 = core_star(&result1, &registry);
 
         assert_eq!(
-            result1.slots(), result2.slots(),
+            result1.slots(),
+            result2.slots(),
             "core_star should be idempotent for slots (r ∈ fs_coh case)"
         );
         assert_eq!(
-            result1.relations(), result2.relations(),
+            result1.relations(),
+            result2.relations(),
             "core_star should be idempotent for relations (r ∈ fs_coh case)"
         );
         assert_eq!(
-            result1.types_map(), result2.types_map(),
+            result1.types_map(),
+            result2.types_map(),
             "core_star should be idempotent for types (r ∈ fs_coh case)"
         );
     }
@@ -3211,15 +3217,18 @@ fn theorem_10_core_star_idempotent() {
         let result2 = core_star(&result1, &registry);
 
         assert_eq!(
-            result1.slots(), result2.slots(),
+            result1.slots(),
+            result2.slots(),
             "core_star should be idempotent for slots (r = f case)"
         );
         assert_eq!(
-            result1.relations(), result2.relations(),
+            result1.relations(),
+            result2.relations(),
             "core_star should be idempotent for relations (r = f case)"
         );
         assert_eq!(
-            result1.types_map(), result2.types_map(),
+            result1.types_map(),
+            result2.types_map(),
             "core_star should be idempotent for types (r = f case)"
         );
     }
@@ -3266,15 +3275,18 @@ fn theorem_10_core_star_idempotent() {
         let result2 = core_star(&result1, &registry);
 
         assert_eq!(
-            result1.slots(), result2.slots(),
+            result1.slots(),
+            result2.slots(),
             "core_star should be idempotent even when input has invalid rules"
         );
         assert_eq!(
-            result1.relations(), result2.relations(),
+            result1.relations(),
+            result2.relations(),
             "core_star should be idempotent even when input has inadmissible relations"
         );
         assert_eq!(
-            result1.types_map(), result2.types_map(),
+            result1.types_map(),
+            result2.types_map(),
             "core_star should be idempotent for types even with invalid input"
         );
     }
@@ -3348,15 +3360,18 @@ fn theorem_11_independent_transitions_commute() {
         let normalized_t2_t1 = normalize_system(system_t2_t1);
 
         assert_eq!(
-            normalized_t1_t2.slots(), normalized_t2_t1.slots(),
+            normalized_t1_t2.slots(),
+            normalized_t2_t1.slots(),
             "independent InsertSlot transitions must commute (slots)"
         );
         assert_eq!(
-            normalized_t1_t2.relations(), normalized_t2_t1.relations(),
+            normalized_t1_t2.relations(),
+            normalized_t2_t1.relations(),
             "independent InsertSlot transitions must commute (relations)"
         );
         assert_eq!(
-            normalized_t1_t2.types_map(), normalized_t2_t1.types_map(),
+            normalized_t1_t2.types_map(),
+            normalized_t2_t1.types_map(),
             "independent InsertSlot transitions must commute (types)"
         );
     }
@@ -3424,15 +3439,18 @@ fn theorem_11_independent_transitions_commute() {
         let normalized_t2_t1 = normalize_system(system_t2_t1);
 
         assert_eq!(
-            normalized_t1_t2.slots(), normalized_t2_t1.slots(),
+            normalized_t1_t2.slots(),
+            normalized_t2_t1.slots(),
             "independent Attach transitions must commute (slots)"
         );
         assert_eq!(
-            normalized_t1_t2.relations(), normalized_t2_t1.relations(),
+            normalized_t1_t2.relations(),
+            normalized_t2_t1.relations(),
             "independent Attach transitions must commute (relations)"
         );
         assert_eq!(
-            normalized_t1_t2.types_map(), normalized_t2_t1.types_map(),
+            normalized_t1_t2.types_map(),
+            normalized_t2_t1.types_map(),
             "independent Attach transitions must commute (types)"
         );
     }
@@ -3506,15 +3524,18 @@ fn theorem_11_independent_transitions_commute() {
         let normalized_t2_t1 = normalize_system(system_t2_t1);
 
         assert_eq!(
-            normalized_t1_t2.slots(), normalized_t2_t1.slots(),
+            normalized_t1_t2.slots(),
+            normalized_t2_t1.slots(),
             "independent Retype transitions must commute (slots)"
         );
         assert_eq!(
-            normalized_t1_t2.relations(), normalized_t2_t1.relations(),
+            normalized_t1_t2.relations(),
+            normalized_t2_t1.relations(),
             "independent Retype transitions must commute (relations)"
         );
         assert_eq!(
-            normalized_t1_t2.types_map(), normalized_t2_t1.types_map(),
+            normalized_t1_t2.types_map(),
+            normalized_t2_t1.types_map(),
             "independent Retype transitions must commute (types)"
         );
     }
@@ -3628,15 +3649,18 @@ fn theorem_12_replay_convergence() {
         let normalized2 = normalize_system(result2);
 
         assert_eq!(
-            normalized1.slots(), normalized2.slots(),
+            normalized1.slots(),
+            normalized2.slots(),
             "same history + same initial should produce same result (slots)"
         );
         assert_eq!(
-            normalized1.relations(), normalized2.relations(),
+            normalized1.relations(),
+            normalized2.relations(),
             "same history + same initial should produce same result (relations)"
         );
         assert_eq!(
-            normalized1.types_map(), normalized2.types_map(),
+            normalized1.types_map(),
+            normalized2.types_map(),
             "same history + same initial should produce same result (types)"
         );
     }
@@ -3706,15 +3730,18 @@ fn theorem_12_replay_convergence() {
         let normalized2 = normalize_system(result2);
 
         assert_eq!(
-            normalized1.slots(), normalized2.slots(),
+            normalized1.slots(),
+            normalized2.slots(),
             "different orderings should converge to same result (slots)"
         );
         assert_eq!(
-            normalized1.relations(), normalized2.relations(),
+            normalized1.relations(),
+            normalized2.relations(),
             "different orderings should converge to same result (relations)"
         );
         assert_eq!(
-            normalized1.types_map(), normalized2.types_map(),
+            normalized1.types_map(),
+            normalized2.types_map(),
             "different orderings should converge to same result (types)"
         );
     }
@@ -3809,15 +3836,18 @@ fn theorem_12_replay_convergence() {
         let normalized2 = normalize_system(result2);
 
         assert_eq!(
-            normalized1.slots(), normalized2.slots(),
+            normalized1.slots(),
+            normalized2.slots(),
             "complex scenario: different orderings should converge (slots)"
         );
         assert_eq!(
-            normalized1.relations(), normalized2.relations(),
+            normalized1.relations(),
+            normalized2.relations(),
             "complex scenario: different orderings should converge (relations)"
         );
         assert_eq!(
-            normalized1.types_map(), normalized2.types_map(),
+            normalized1.types_map(),
+            normalized2.types_map(),
             "complex scenario: different orderings should converge (types)"
         );
     }
