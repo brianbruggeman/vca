@@ -5,5 +5,6 @@ Towers.vo Towers.glob Towers.v.beautified Towers.required_vo: Towers.v Core.vo A
 CoreStar.vo CoreStar.glob CoreStar.v.beautified CoreStar.required_vo: CoreStar.v Core.vo Admissibility.vo Transitions.vo
 Commutativity.vo Commutativity.glob Commutativity.v.beautified Commutativity.required_vo: Commutativity.v Core.vo Transitions.vo
 Temporal.vo Temporal.glob Temporal.v.beautified Temporal.required_vo: Temporal.v Core.vo Admissibility.vo Towers.vo
+Replay.vo Replay.glob Replay.v.beautified Replay.required_vo: Replay.v Core.vo Transitions.vo Admissibility.vo CoreStar.vo Commutativity.vo
 Lambda.vo Lambda.glob Lambda.v.beautified Lambda.required_vo: Lambda.v Core.vo Transitions.vo Commutativity.vo Model.vo
 Model.vo Model.glob Model.v.beautified Model.required_vo: Model.v Core.vo Admissibility.vo Transitions.vo Towers.vo Commutativity.vo
